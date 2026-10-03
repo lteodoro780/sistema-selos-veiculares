@@ -19,4 +19,4 @@ Validação executada em Windows com Python 3.12, Django 5.2.17 e Chromium. O se
 
 Não foi feito teste com câmera Hikvision física, câmera de celular real, serviços systemd ou instalação Linux nativa. A conectividade ISAPI e a impressão em papel/equipamento físico precisam de validação específica. Screenshots documentam a demonstração local, não um ambiente de produção.
 
-Não houve publicação ou push. O código público utiliza um esquema genérico para banco novo e não é um pacote de atualização da instalação institucional.
+O código público utiliza um esquema genérico para banco novo e não é um pacote de atualização da instalação institucional. A publicação deste repositório não altera os limites da validação descritos acima.

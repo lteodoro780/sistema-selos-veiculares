@@ -1,5 +1,9 @@
 # Sistema de Selos Veiculares — Demo
 
+[![CI](https://github.com/lteodoro780/sistema-selos-veiculares/actions/workflows/ci.yml/badge.svg)](https://github.com/lteodoro780/sistema-selos-veiculares/actions/workflows/ci.yml)
+![Python](https://img.shields.io/badge/Python-3.12%2B-blue)
+![Django](https://img.shields.io/badge/Django-5.2-0C4B33)
+
 Aplicação web para gestão de pessoas, veículos e selos de identificação com QR Code, consulta operacional, ocorrências e movimentações de placas. Esta edição pública reúne a base Linux e as atualizações até v11 em um único projeto Django, com identidade genérica e exemplos sintéticos.
 
 ![Painel de veículos com dados fictícios](docs/screenshots/painel.png)
@@ -59,7 +63,7 @@ SQLite é o banco configurado e testado nesta entrega. A migração para outro b
 
 ## Instalação local
 
-Extraia o pacote ou clone seu futuro repositório e entre em `sistema-selos-veiculares-demo`. Instale Python 3.12 ou superior. Use uma pasta nova; não reutilize o banco da instalação original, pois o esquema público utiliza nomes genéricos.
+Extraia o pacote ou clone este repositório e entre na pasta do projeto. Instale Python 3.12 ou superior. Use uma pasta nova; não reutilize o banco da instalação original, pois o esquema público utiliza nomes genéricos.
 
 ### Windows — PowerShell
 
@@ -104,6 +108,17 @@ Capturas da aplicação executada localmente com registros gerados por `carregar
 ![Movimentações simuladas](docs/screenshots/lpr.png)
 ![Criação de novo selo](docs/screenshots/criar-selo.png)
 
+## Qualidade
+
+- 93 testes automatizados aprovados na consolidação da versão pública.
+- `manage.py check` sem problemas identificados.
+- `makemigrations --check --dry-run` sem alterações pendentes de esquema.
+- 11 rotas verificadas em navegador Chromium.
+- 6 screenshots revisados com dados fictícios.
+- CI no GitHub Actions executa verificação, checagem de migrações e testes a cada push/PR.
+
+Os detalhes e limites da validação estão em [docs/VALIDACAO.md](docs/VALIDACAO.md).
+
 ## Segurança e privacidade
 
 - Configuração privada, bancos, mídia, backups, planilhas e ambientes estão excluídos por `.gitignore` e ausentes do pacote distribuído.
@@ -126,4 +141,4 @@ python manage.py makemigrations --check --dry-run
 python manage.py test --noinput
 ```
 
-Para detalhes de operação local, consulte [GUIA_LINUX.md](GUIA_LINUX.md). Esta entrega não foi publicada nem enviada ao GitHub.
+Para detalhes de operação local, consulte [GUIA_LINUX.md](GUIA_LINUX.md).

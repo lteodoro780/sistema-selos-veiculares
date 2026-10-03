@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    env:
+      DJANGO_SECRET_KEY: ci-only-secret-key-0123456789abcdefghijklmnopqrstuvwxyz-ABCDEFGHIJKLMNOPQRSTUVWXYZ
+      SELOS_MODE: local
+      SELOS_PORT: "8004"
+      PUBLIC_BASE_URL: http://127.0.0.1:8004
+      LPR_ENABLED: "false"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Prepare local data directory
+        run: mkdir -p data
+
+      - name: Django system check
+        run: python manage.py check
+
+      - name: Check migrations
+        run: python manage.py makemigrations --check --dry-run
+
+      - name: Run test suite
+        run: python manage.py test --noinput
+
+      - name: Collect static files
+        run: python manage.py collectstatic --noinput --verbosity 0
