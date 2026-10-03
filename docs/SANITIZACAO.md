@@ -35,4 +35,4 @@ O esquema público foi generalizado também nas migrações iniciais. Não use e
 
 ## Publicação
 
-Nenhum repositório remoto foi criado, nenhum commit foi enviado e nenhum push foi realizado. O pacote entregue contém somente os arquivos selecionados da versão pública. Uma revisão técnica de padrões e a inspeção visual das capturas foram executadas; não há garantia sobre material externo não fornecido.
+Esta cópia sanitizada é a versão pública deste repositório. O histórico de produção, pacotes de atualização originais, bancos, mídia, credenciais e configurações privadas permanecem fora do Git. A revisão técnica de padrões e a inspeção visual das capturas foram executadas; não há garantia sobre material externo não fornecido.
