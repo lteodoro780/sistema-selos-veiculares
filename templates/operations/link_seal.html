@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Vincular ou criar selo{% endblock %}
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/seal-link-v11.css' %}">
+<div class="seal-workflow-page">
+  <div class="page-head seal-workflow-head">
+    <div>
+      <p class="eyebrow">SELOS · OPERAÇÕES</p>
+      <h1>Vincular ou criar selo</h1>
+      <p>Use um código físico já existente ou gere um novo selo com código numérico de 8 dígitos.</p>
+    </div>
+    <a class="button secondary" href="{% url 'seals:list' %}">Ver todos os selos</a>
+  </div>
+
+  {% if created_seal %}
+  <section class="seal-created-card" aria-live="polite">
+    <div>
+      <span class="seal-created-kicker">SELO CRIADO</span>
+      <strong class="seal-created-code">{{ created_seal.numero_serial }}</strong>
+      <p>{{ created_seal.veiculo.placa }} · {{ created_seal.veiculo.proprietario.nome_exibicao }} · {{ created_seal.get_status_display }}</p>
+      <small>Esse número de 8 dígitos é o código de consulta do selo. O QR continua abrindo a consulta segura do sistema.</small>
+    </div>
+    <div class="seal-created-actions">
+      <a class="button secondary" href="{% url 'seals:qr' created_seal.pk %}" target="_blank" rel="noopener">Visualizar QR</a>
+      <a class="button primary" href="{% url 'seals:pdf' created_seal.pk %}">Baixar selo PDF</a>
+    </div>
+  </section>
+  {% endif %}
+
+  <div class="seal-mode-tabs" role="tablist" aria-label="Modo de vínculo do selo">
+    <button type="button" role="tab" data-seal-tab="vincular" aria-selected="{% if active_mode == 'vincular' %}true{% else %}false{% endif %}">
+      <span class="seal-tab-number">1</span>
+      <span><strong>Vincular código existente</strong><small>Quando o selo físico já possui um código.</small></span>
+    </button>
+    <button type="button" role="tab" data-seal-tab="criar" aria-selected="{% if active_mode == 'criar' %}true{% else %}false{% endif %}">
+      <span class="seal-tab-number">2</span>
+      <span><strong>Criar novo selo</strong><small>Gera automaticamente um código numérico de 8 dígitos.</small></span>
+    </button>
+  </div>
+
+  <section class="seal-mode-panel{% if active_mode != 'vincular' %} is-hidden{% endif %}" data-seal-panel="vincular" role="tabpanel">
+    <div class="seal-panel-intro">
+      <div><h2>Vincular código já impresso</h2><p>Informe exatamente o código existente no material físico.</p></div>
+      <span class="seal-mode-badge">CÓDIGO EXISTENTE</span>
+    </div>
+    {% if existing_form.non_field_errors %}<div class="notice error">{{ existing_form.non_field_errors }}</div>{% endif %}
+    <form method="post" class="seal-link-form" autocomplete="off">
+      {% csrf_token %}<input type="hidden" name="modo" value="vincular">
+      <div class="seal-form-grid">
+        <div class="seal-field span-2">
+          <label for="{{ existing_form.codigo_selo.id_for_label }}">{{ existing_form.codigo_selo.label }}</label>
+          {{ existing_form.codigo_selo }}{{ existing_form.codigo_selo.errors }}
+          <small>{{ existing_form.codigo_selo.help_text }}</small>
+        </div>
+        <div class="seal-field">
+          <label for="existing-owner-filter">Localizar proprietário</label>
+          <input id="existing-owner-filter" class="seal-filter-input" type="search" placeholder="Nome, cargo ou seção..." data-filter-target="{{ existing_form.proprietario.id_for_label }}">
+          {{ existing_form.proprietario }}{{ existing_form.proprietario.errors }}
+          <small>Os cadastros mais recentes aparecem primeiro.</small>
+        </div>
+        <div class="seal-field">
+          <label for="existing-vehicle-filter">Localizar veículo</label>
+          <input id="existing-vehicle-filter" class="seal-filter-input" type="search" placeholder="Placa, marca ou modelo..." data-filter-target="{{ existing_form.veiculo.id_for_label }}">
+          {{ existing_form.veiculo }}{{ existing_form.veiculo.errors }}
+          <small>Ao escolher o proprietário, a lista é reduzida aos veículos dele.</small>
+        </div>
+        <div class="seal-field"><label for="{{ existing_form.validade.id_for_label }}">{{ existing_form.validade.label }}</label>{{ existing_form.validade }}{{ existing_form.validade.errors }}</div>
+        <div class="seal-field seal-check-field"><label class="seal-check">{{ existing_form.ativar_apos_vinculo }}<span><strong>{{ existing_form.ativar_apos_vinculo.label }}</strong><small>{{ existing_form.ativar_apos_vinculo.help_text }}</small></span></label>{{ existing_form.ativar_apos_vinculo.errors }}</div>
+      </div>
+      <div class="seal-form-actions"><a class="button secondary" href="{% url 'seals:list' %}">Cancelar</a><button class="button primary" type="submit">Confirmar vínculo</button></div>
+    </form>
+  </section>
+
+  <section class="seal-mode-panel{% if active_mode != 'criar' %} is-hidden{% endif %}" data-seal-panel="criar" role="tabpanel">
+    <div class="seal-panel-intro">
+      <div><h2>Criar selo pelo sistema</h2><p>Para quando não existe um código físico disponível para vincular.</p></div>
+      <span class="seal-mode-badge generated">8 DÍGITOS</span>
+    </div>
+
+    <div class="seal-code-explain">
+      <div class="seal-code-sample">••••••••</div>
+      <div><strong>Código gerado automaticamente</strong><p>O sistema cria um número exclusivo com exatamente 8 dígitos, como <b>48392715</b>. Esse número será impresso no selo e também poderá ser digitado na consulta manual.</p><small>O QR Code continua contendo o endereço seguro de validação; o número de 8 dígitos identifica o mesmo registro.</small></div>
+    </div>
+
+    {% if generated_form.non_field_errors %}<div class="notice error">{{ generated_form.non_field_errors }}</div>{% endif %}
+    <form method="post" class="seal-link-form" autocomplete="off">
+      {% csrf_token %}<input type="hidden" name="modo" value="criar">
+      <div class="seal-form-grid">
+        <div class="seal-field">
+          <label for="new-owner-filter">Localizar proprietário</label>
+          <input id="new-owner-filter" class="seal-filter-input" type="search" placeholder="Nome, cargo ou seção..." data-filter-target="{{ generated_form.proprietario.id_for_label }}">
+          {{ generated_form.proprietario }}{{ generated_form.proprietario.errors }}
+          <small>Os cadastros mais recentes aparecem primeiro.</small>
+        </div>
+        <div class="seal-field">
+          <label for="new-vehicle-filter">Localizar veículo</label>
+          <input id="new-vehicle-filter" class="seal-filter-input" type="search" placeholder="Placa, marca ou modelo..." data-filter-target="{{ generated_form.veiculo.id_for_label }}">
+          {{ generated_form.veiculo }}{{ generated_form.veiculo.errors }}
+          <small>O veículo não pode possuir outro selo vinculado.</small>
+        </div>
+        <div class="seal-field"><label for="{{ generated_form.validade.id_for_label }}">{{ generated_form.validade.label }}</label>{{ generated_form.validade }}{{ generated_form.validade.errors }}</div>
+        <div class="seal-field seal-check-field"><label class="seal-check">{{ generated_form.ativar_apos_vinculo }}<span><strong>{{ generated_form.ativar_apos_vinculo.label }}</strong><small>{{ generated_form.ativar_apos_vinculo.help_text }}</small></span></label>{{ generated_form.ativar_apos_vinculo.errors }}</div>
+      </div>
+      <div class="seal-form-actions"><a class="button secondary" href="{% url 'seals:list' %}">Cancelar</a><button class="button primary" type="submit">Gerar código e criar selo</button></div>
+    </form>
+  </section>
+
+  {{ vehicle_owner_map|json_script:"seal-vehicle-owner-map" }}
+</div>
+<script>
+(function(){
+  const tabs=[...document.querySelectorAll('[data-seal-tab]')];
+  const panels=[...document.querySelectorAll('[data-seal-panel]')];
+  function activate(mode, updateUrl=true){
+    tabs.forEach(t=>t.setAttribute('aria-selected',String(t.dataset.sealTab===mode)));
+    panels.forEach(p=>p.classList.toggle('is-hidden',p.dataset.sealPanel!==mode));
+    if(updateUrl){const u=new URL(window.location.href);u.searchParams.set('modo',mode);u.searchParams.delete('criado');history.replaceState(null,'',u);}
+  }
+  tabs.forEach(t=>t.addEventListener('click',()=>activate(t.dataset.sealTab)));
+
+  let ownerMap={};
+  try{ownerMap=JSON.parse(document.getElementById('seal-vehicle-owner-map').textContent||'{}')}catch(e){}
+  function norm(s){return String(s||'').toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g,'')}
+  function setup(ownerId,vehicleId,ownerFilterId,vehicleFilterId){
+    const owner=document.getElementById(ownerId), vehicle=document.getElementById(vehicleId);
+    const ownerFilter=document.getElementById(ownerFilterId), vehicleFilter=document.getElementById(vehicleFilterId);
+    if(!owner||!vehicle) return;
+    const ownerOptions=[...owner.options], vehicleOptions=[...vehicle.options];
+    function filterOwners(){const q=norm(ownerFilter&&ownerFilter.value);ownerOptions.forEach(o=>{if(!o.value)return;const ok=!q||norm(o.textContent).includes(q);o.hidden=!ok;o.disabled=!ok;});}
+    function filterVehicles(){const q=norm(vehicleFilter&&vehicleFilter.value), oid=String(owner.value||'');vehicleOptions.forEach(o=>{if(!o.value)return;const belongs=!oid||String(ownerMap[o.value])===oid;const matches=!q||norm(o.textContent).includes(q);const ok=belongs&&matches;o.hidden=!ok;o.disabled=!ok;});if(vehicle.value&&vehicle.selectedOptions[0]&&vehicle.selectedOptions[0].disabled)vehicle.value='';}
+    owner.addEventListener('change',filterVehicles);
+    ownerFilter&&ownerFilter.addEventListener('input',filterOwners);
+    vehicleFilter&&vehicleFilter.addEventListener('input',filterVehicles);
+    filterOwners();filterVehicles();
+  }
+  setup('{{ existing_form.proprietario.id_for_label }}','{{ existing_form.veiculo.id_for_label }}','existing-owner-filter','existing-vehicle-filter');
+  setup('{{ generated_form.proprietario.id_for_label }}','{{ generated_form.veiculo.id_for_label }}','new-owner-filter','new-vehicle-filter');
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}{% if person.pk %}Preencher cadastro{% else %}Cadastrar pessoa{% endif %}{% endblock %}
+{% block content %}
+<a class="back-link" href="{% url 'people:list' %}">← Pessoas</a><div class="page-head"><div><p class="eyebrow">PREENCHIMENTO ADMINISTRATIVO</p><h1>{% if person.pk %}{{ person.nome_exibicao }}{% else %}Cadastrar pessoa{% endif %}</h1><p>Dados cadastrais e contato. Este registro não cria uma conta de acesso.</p></div>{% if person.pk %}<a class="button secondary" href="{% url 'people:detail' person.pk %}">Abrir ficha completa</a>{% endif %}</div>
+{% if person.missing_fields %}<div class="notice warning"><strong>Falta preencher:</strong> {% for key,label in person.missing_fields %}{{ label }}{% if not forloop.last %} · {% endif %}{% endfor %}</div>{% endif %}
+<section class="card">{% if form.non_field_errors %}<div class="notice error">{{ form.non_field_errors }}</div>{% endif %}<form method="post" class="form-grid">{% csrf_token %}{% for field in form %}{% if field.is_hidden %}{{ field }}{% else %}<div>{{ field.label_tag }}{{ field }}{{ field.errors }}{% if field.help_text %}<small class="helptext">{{ field.help_text }}</small>{% endif %}</div>{% endif %}{% endfor %}<div class="form-actions"><a class="button secondary" href="{% url 'people:list' %}">Cancelar</a><button class="button primary" type="submit">Salvar cadastro</button></div></form></section>
+{% endblock %}

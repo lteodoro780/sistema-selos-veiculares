@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Importar planilha{% endblock %}
+{% block content %}
+<div class="page-head">
+    <div><p class="eyebrow">ADMINISTRAÇÃO</p><h1>Importar planilha</h1><p>Selecione um arquivo Excel, CSV ou TSV. Confira a prévia antes de confirmar.</p></div>
+    <a class="button secondary" href="{% url 'accounts:csv-template' %}">Baixar planilha modelo</a>
+</div>
+
+{% if csv_errors %}
+<div class="notice error"><strong>O arquivo possui problemas:</strong><ul>{% for error in csv_errors %}<li>{{ error }}</li>{% endfor %}</ul></div>
+{% endif %}
+{% if csv_warnings %}
+<div class="notice warning"><strong>A prévia foi criada com avisos:</strong><ul>{% for warning in csv_warnings %}<li>{{ warning }}</li>{% endfor %}</ul></div>
+{% endif %}
+
+{% if preview %}
+<div class="stats-grid import-stats">
+    <div class="stat-card"><span>PESSOAS</span><strong>{{ counts.people_total }}</strong><small>{{ counts.people_created }} novas · {{ counts.people_updated }} atualizações</small></div>
+    <div class="stat-card"><span>VEÍCULOS</span><strong>{{ counts.vehicles_total }}</strong><small>{{ counts.vehicles_created }} novos · {{ counts.vehicles_updated }} atualizações</small></div>
+    <div class="stat-card"><span>SELOS COM QR CODE</span><strong>{{ counts.seals_total }}</strong><small>{{ counts.seals_created }} novos · {{ counts.seals_updated }} atualizações{% if counts.seals_skipped %} · {{ counts.seals_skipped }} ignorados{% endif %}</small></div>
+    <div class="stat-card"><span>FORMATO</span><strong class="format-name">{% if import_mode == 'legacy_vehicles_xlsx' %}EXCEL GRUPO B{% elif import_mode == 'legacy_vehicles' %}TSV GRUPO B{% elif import_mode == 'people_xlsx' %}EXCEL{% else %}CSV{% endif %}</strong><small>Detectado automaticamente</small></div>
+</div>
+<section class="card table-card">
+    <div class="card-head padded"><h2>Prévia das pessoas</h2><p>Mostrando até 100 registros. Nenhum dado foi gravado ainda.</p></div>
+    <div class="table-wrap"><table><thead><tr><th>Referência de importação</th><th>Nome</th><th>Nome preferido</th><th>Cargo</th><th>Organização / setor</th><th>Telefone / ramal</th><th>Perfil</th><th>Ativo</th></tr></thead><tbody>
+    {% for row in people_rows %}<tr><td><strong>{{ row.username }}</strong></td><td>{{ row.first_name }} {{ row.last_name }}</td><td>{{ row.nome_preferido|default:"—" }}</td><td>{{ row.cargo|default:"—" }}</td><td>{{ row.organizacao|default:"—" }} / {{ row.secao|default:"—" }}</td><td>{{ row.telefone|default:"—" }}{% if row.ramal %}<small class="table-subtitle">Ramal: {{ row.ramal }}</small>{% endif %}</td><td>{{ row.role }}</td><td>{% if row.is_active %}Sim{% else %}Não{% endif %}</td></tr>{% endfor %}
+    </tbody></table></div>
+</section>
+    {% if vehicle_rows %}<section class="card table-card"><div class="card-head padded"><h2>Prévia dos veículos</h2><p>Mostrando até 100 registros válidos.</p></div><div class="table-wrap"><table><thead><tr><th>Placa</th><th>Tipo</th><th>Marca</th><th>Modelo</th><th>Cor</th><th>Ano</th><th>Nº do selo</th><th>Proprietário interno</th></tr></thead><tbody>{% for row in vehicle_rows %}<tr><td><strong>{{ row.placa }}</strong></td><td>{{ row.tipo }}</td><td>{{ row.marca }}</td><td>{{ row.modelo }}</td><td>{{ row.cor }}</td><td>{{ row.ano_modelo }}</td><td>{% if row.seal_number %}<strong>{{ row.seal_number }}</strong>{% else %}<span class="muted">Sem selo</span>{% endif %}</td><td>{{ row.owner_username }}</td></tr>{% endfor %}</tbody></table></div></section>{% endif %}
+<div class="import-actions">
+    <form method="post">{% csrf_token %}<input type="hidden" name="action" value="cancel"><button class="button secondary" type="submit">Cancelar e escolher outro arquivo</button></form>
+    <form method="post">{% csrf_token %}<input type="hidden" name="action" value="confirm"><button class="button primary" type="submit">Confirmar importação</button></form>
+</div>
+{% else %}
+<section class="card import-card">
+    <div><h2>Selecionar planilha</h2><p>O sistema aceita Excel (.xlsx), CSV e TSV. No Excel, todas as abas de veículos são lidas e reunidas em uma única prévia.</p></div>
+    <form method="post" enctype="multipart/form-data" class="stack-form">{% csrf_token %}<input type="hidden" name="action" value="preview">{{ form.as_div }}<button class="button primary" type="submit">Validar e visualizar</button></form>
+</section>
+    <section class="card"><div class="card-head"><h2>Regras da importação</h2></div><ul class="rules"><li>No modelo de pessoas, <code>username</code> é a única coluna obrigatória e identifica o registro.</li><li>As abas GRUPO B, Provisório, GRUPO A, Grupo C, prestadores/visitantes e Alunos são consolidadas automaticamente.</li><li>Em cada aba, os blocos de carro e moto são lidos separadamente.</li><li>Quando a planilha informa N° do selo ou N° do lacre, o sistema vincula o selo ao veículo e cria o QR Code.</li><li>Números de selo repetidos em placas diferentes são ignorados e aparecem como aviso na prévia.</li><li>Importar novamente preserva os campos já preenchidos e os veículos existentes. Para corrigir dados, use Pessoas ou Importar preenchimento.</li><li>Registros ausentes da nova planilha não são excluídos.</li><li>A importação cria apenas cadastros de pessoas, sem conta de acesso. Permissões e senhas não são importadas.</li></ul></section>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,19 @@
+/* Shared portal inspired by the work-project screenshots; no external fonts/assets. */
+:root{--green:#50771f;--green2:#45691b;--teal:#285b47;--lime:#7db536;--bg:#f0f2f4;--text:#293440;--muted:#657487;--border:#d6dce1;--shadow:0 2px 5px rgba(0,0,0,.04)}
+.sidebar{width:230px;background:#78ae35;padding:24px 16px 16px;overflow-y:auto}
+.brand{padding:0 7px 24px;border-bottom:1px solid #ffffff35;min-height:60px}
+.brand strong{font-size:20px;letter-spacing:.3px;color:#17330c}.brand strong span{color:#1f3914}.brand small{color:#17330c}
+.sidebar nav{margin-top:16px;gap:3px}.sidebar nav a{border-radius:0;color:#17330c;font-weight:600;padding:10px 8px;border-left:3px solid transparent}
+.sidebar nav a:hover,.sidebar nav a:focus-visible{background:#0002;border-left-color:#fff}
+.nav-label{color:#173400;padding:15px 12px 6px}.logout{padding-top:16px}.logout button{border-radius:0;border-color:#ffffff80}
+.app-main{margin-left:230px}.topbar{height:60px;background:#222;color:#fff;padding:0 28px;border:0;gap:14px}
+.system-title{margin-right:auto;font-size:12px;letter-spacing:.5px;color:#d0d6dc}.topbar small{color:#d6e1c9;font-size:11px}
+.topbar strong{font-size:13px}.status-pill{border-radius:0;background:#3b3b3b;color:#fff;font-weight:500}
+.content{max-width:1680px;padding:32px 34px}.page-head h1{font-size:28px;letter-spacing:0}
+.card,.stat-card,.seal-card,.filter-bar{border-radius:0}.stat-card{border-top:4px solid #78ae35;min-height:132px}
+.stat-card strong{font-size:32px;color:var(--text)}.button{border-radius:2px}.button.primary{background:#527a22}.button.primary:hover{background:#3a5b16}
+.badge{border-radius:2px}.form-grid input,.form-grid select,.form-grid textarea,.stack-form input{border-radius:2px}
+.auth-logo{background:#78ae35;color:#1c3310;border-radius:4px}
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #2476aa;outline-offset:2px}
+@media(max-width:1000px){.system-title{max-width:210px;font-size:10px}.content{padding:24px}}
+@media(max-width:760px){.sidebar{position:relative;width:100%;padding:18px}.app-main{margin-left:0}.brand{padding-bottom:14px}.sidebar nav{grid-template-columns:repeat(2,minmax(0,1fr))}.sidebar .logout{margin-top:8px}.topbar{display:flex;height:auto;min-height:54px;padding:12px 18px;flex-wrap:wrap}.system-title{display:none}.topbar>div{margin-right:auto;text-align:left}.content{padding:20px 16px}}

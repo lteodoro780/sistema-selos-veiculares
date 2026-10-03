@@ -1,0 +1,375 @@
+{% extends "base.html" %}
+{% block title %}{% if form.instance.pk %}{{ form.instance.numero }}{% else %}Registrar ocorrência{% endif %}{% endblock %}
+{% block content %}
+<div class="occ-page">
+  <a class="back-link" href="{% url 'operations:occurrence-list' %}">← Voltar para ocorrências</a>
+
+  <div class="page-head occ-head">
+    <div>
+      <p class="eyebrow">OCORRÊNCIAS</p>
+      <h1>{% if form.instance.pk %}{{ form.instance.numero }}{% else %}Registrar ocorrência{% endif %}</h1>
+      <p>{% if form.instance.pk %}Atualize os dados e prepare o comunicado ao proprietário.{% else %}Use as frases rápidas ou escreva livremente.{% endif %}</p>
+    </div>
+    {% if form.instance.pk %}
+    <div class="occ-top-status">
+      <span class="badge large {{ form.instance.status|lower }}">{{ form.instance.get_status_display }}</span>
+    </div>
+    {% endif %}
+  </div>
+
+  {% if form.non_field_errors %}<div class="notice error">{{ form.non_field_errors }}</div>{% endif %}
+
+  <form method="post" class="occ-edit-form" id="occurrence-form">
+    {% csrf_token %}
+    <div class="occ-layout">
+      <section class="occ-card occ-form-card">
+        <div class="occ-section-title"><div><strong>Dados da ocorrência</strong><small>Vínculo, classificação, data e local.</small></div></div>
+        <div class="occ-fields-grid">
+          <div class="occ-field span-2 occ-person-picker" id="occ-person-picker" data-search-url="{% url 'operations:occurrence-person-search' %}">
+            <label for="occ-person-search">Pessoa / proprietário</label>
+            <div class="occ-person-searchbox">
+              <input id="occ-person-search" type="search" autocomplete="off" placeholder="Digite nome preferido, cargo, seção, placa ou telefone..." aria-label="Buscar pessoa">
+              <button type="button" id="occ-person-clear" class="occ-person-clear" title="Limpar pessoa" aria-label="Limpar pessoa">×</button>
+            </div>
+            <small class="occ-picker-help">Digite pelo menos 2 caracteres. Você também pode procurar diretamente pela placa.</small>
+            <div id="occ-person-results" class="occ-person-results" hidden></div>
+            <div id="occ-selected-person" class="occ-selected-person" hidden></div>
+            <div class="occ-native-control">{{ form.proprietario }}{{ form.proprietario.errors }}</div>
+          </div>
+
+          <div class="occ-field span-2 occ-vehicle-field">
+            <label>Veículo</label>
+            <div id="occ-vehicle-picker" class="occ-vehicle-picker">
+              <div class="occ-picker-empty">Selecione primeiro a pessoa. Os veículos dela aparecerão aqui.</div>
+            </div>
+            <div class="occ-native-control">{{ form.veiculo }}{{ form.veiculo.errors }}</div>
+          </div>
+          <div class="occ-field"><label for="{{ form.selo.id_for_label }}">{{ form.selo.label }}</label>{{ form.selo }}{{ form.selo.errors }}<small class="occ-picker-help">Se o veículo tiver selo vinculado, ele é selecionado automaticamente.</small></div>
+          <div class="occ-field"><label for="{{ form.tipo.id_for_label }}">{{ form.tipo.label }}</label>{{ form.tipo }}{{ form.tipo.errors }}</div>
+          <div class="occ-field"><label for="{{ form.status.id_for_label }}">{{ form.status.label }}</label>{{ form.status }}{{ form.status.errors }}</div>
+          <div class="occ-field"><label for="{{ form.data_hora.id_for_label }}">{{ form.data_hora.label }}</label>{{ form.data_hora }}{{ form.data_hora.errors }}</div>
+          <div class="occ-field span-2"><label for="{{ form.local.id_for_label }}">{{ form.local.label }}</label>{{ form.local }}{{ form.local.errors }}</div>
+        </div>
+
+        <div class="occ-section-title occ-text-title"><div><strong>Relato</strong><small>As frases rápidas apenas adicionam texto. Você continua podendo editar tudo.</small></div></div>
+        <div class="occ-field">
+          <label for="{{ form.descricao.id_for_label }}">{{ form.descricao.label }}</label>
+          {{ form.descricao }}{{ form.descricao.errors }}
+          <div class="occ-quick-block">
+            <span>Frases rápidas para descrição</span>
+            <div class="occ-quick-list">
+              <button type="button" class="occ-phrase" data-target="id_descricao" data-text="Veículo identificado na portaria para conferência de selo veicular.">Conferência de selo</button>
+              <button type="button" class="occ-phrase" data-target="id_descricao" data-text="Selo veicular não apresentado no momento da conferência.">Selo não apresentado</button>
+              <button type="button" class="occ-phrase" data-target="id_descricao" data-text="Selo veicular apresentado com dano físico ou baixa legibilidade.">Selo danificado</button>
+              <button type="button" class="occ-phrase" data-target="id_descricao" data-text="Divergência identificada entre o veículo apresentado e os dados cadastrados no sistema.">Divergência cadastral</button>
+              <button type="button" class="occ-phrase" data-target="id_descricao" data-text="Documentação apresentada com pendência para conferência.">Pendência documental</button>
+              <button type="button" class="occ-phrase" data-target="id_descricao" data-text="Placa informada não localizada no cadastro no momento do atendimento.">Placa não localizada</button>
+              <button type="button" class="occ-phrase" data-target="id_descricao" data-text="Condutor ou proprietário orientado durante o atendimento na portaria.">Orientação realizada</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="occ-field">
+          <label for="{{ form.providencias.id_for_label }}">{{ form.providencias.label }}</label>
+          {{ form.providencias }}{{ form.providencias.errors }}
+          <div class="occ-quick-block">
+            <span>Frases rápidas para providências</span>
+            <div class="occ-quick-list">
+              <button type="button" class="occ-phrase" data-target="id_providencias" data-text="Proprietário orientado a regularizar a situação junto ao setor responsável.">Orientar regularização</button>
+              <button type="button" class="occ-phrase" data-target="id_providencias" data-text="Solicitada apresentação de documentação atualizada.">Solicitar documentos</button>
+              <button type="button" class="occ-phrase" data-target="id_providencias" data-text="Ocorrência encaminhada para análise administrativa.">Encaminhar para análise</button>
+              <button type="button" class="occ-phrase" data-target="id_providencias" data-text="Selo mantido bloqueado preventivamente até conferência.">Bloqueio preventivo</button>
+              <button type="button" class="occ-phrase" data-target="id_providencias" data-text="Acesso liberado após conferência dos dados.">Acesso liberado</button>
+              <button type="button" class="occ-phrase" data-target="id_providencias" data-text="Acesso não autorizado até regularização da pendência.">Acesso não autorizado</button>
+              <button type="button" class="occ-phrase" data-target="id_providencias" data-text="Ocorrência encerrada após regularização da situação.">Regularização concluída</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="occ-savebar">
+          <a class="button secondary" href="{% url 'operations:occurrence-list' %}">Cancelar</a>
+          <button class="button primary" type="submit">{% if form.instance.pk %}Salvar alterações{% else %}Registrar ocorrência{% endif %}</button>
+        </div>
+      </section>
+
+      <aside class="occ-side">
+        <section class="occ-card occ-help-card">
+          <div class="occ-section-title"><div><strong>Como usar</strong><small>Fluxo rápido para a portaria.</small></div></div>
+          <ol class="occ-steps">
+            <li>Procure a pessoa por nome, cargo, seção, telefone ou placa.</li>
+            <li>Escolha um dos veículos; se houver apenas um, ele é selecionado automaticamente.</li>
+            <li>Use uma frase rápida ou escreva o relato.</li>
+            <li>Registre as providências adotadas.</li>
+            <li>Salve a ocorrência.</li>
+            <li>Depois imprima ou envie o comunicado pelo WhatsApp.</li>
+          </ol>
+        </section>
+
+        {% if form.instance.pk %}
+        <section class="occ-card occ-communication" id="communication-panel">
+          <div class="occ-section-title"><div><strong>Comunicado</strong><small>Use o mesmo texto para impressão ou WhatsApp.</small></div></div>
+
+          <div class="occ-contact-summary">
+            <div><span>Proprietário</span><strong>{{ form.instance.proprietario.nome_exibicao }}</strong></div>
+            <div><span>Telefone</span><strong>{{ form.instance.proprietario.telefone|default:"Não informado" }}</strong></div>
+            <div><span>Veículo</span><strong>{{ form.instance.veiculo.placa }}</strong></div>
+          </div>
+
+          <label class="occ-template-label" for="message-template">Modelo da mensagem</label>
+          <select id="message-template" class="occ-template-select">
+            <option value="aviso">Aviso de ocorrência</option>
+            <option value="selo">Pendência de selo</option>
+            <option value="documento">Pendência documental</option>
+            <option value="comparecimento">Solicitação de comparecimento</option>
+            <option value="encerramento">Regularização / encerramento</option>
+          </select>
+
+          <label class="occ-template-label" for="whatsapp-message">Mensagem</label>
+          <textarea id="whatsapp-message" rows="10"></textarea>
+          <p class="occ-hint">Você pode editar a mensagem antes de copiar, imprimir ou abrir o WhatsApp.</p>
+
+          <div class="occ-comm-actions">
+            <button type="button" class="button secondary" id="copy-message">Copiar mensagem</button>
+            <button type="button" class="button secondary" id="print-message">Imprimir comunicado</button>
+            <button type="button" class="button whatsapp" id="open-whatsapp">Abrir WhatsApp</button>
+          </div>
+          <p class="occ-hint" id="whatsapp-help"></p>
+        </section>
+        {% endif %}
+      </aside>
+    </div>
+  </form>
+
+  {% if form.instance.pk %}
+  <section class="occ-print-sheet" id="occ-print-sheet" aria-hidden="true">
+    <div class="occ-print-header">
+      <strong>SISTEMA DE IDENTIFICAÇÃO VEICULAR</strong>
+      <span>COMUNICADO DE OCORRÊNCIA VEICULAR</span>
+    </div>
+    <div class="occ-print-meta">
+      <div><span>Ocorrência</span><strong>{{ form.instance.numero }}</strong></div>
+      <div><span>Data</span><strong id="print-date"></strong></div>
+      <div><span>Veículo</span><strong id="print-plate"></strong></div>
+      <div><span>Proprietário</span><strong id="print-owner"></strong></div>
+      <div class="wide"><span>Local</span><strong id="print-local"></strong></div>
+    </div>
+    <div class="occ-print-body" id="print-message-body"></div>
+    <div class="occ-print-note">Este documento foi gerado a partir da ocorrência registrada no Sistema de Identificação Veicular.</div>
+    <div class="occ-print-signatures"><div>Responsável pelo registro</div><div>Ciente / proprietário</div></div>
+  </section>
+  {% endif %}
+</div>
+
+<script>
+(function(){
+  const root=document.getElementById('occ-person-picker');
+  if(!root) return;
+  const searchUrl=root.dataset.searchUrl;
+  const search=document.getElementById('occ-person-search');
+  const results=document.getElementById('occ-person-results');
+  const selected=document.getElementById('occ-selected-person');
+  const vehiclesBox=document.getElementById('occ-vehicle-picker');
+  const clearBtn=document.getElementById('occ-person-clear');
+  const ownerSelect=document.getElementById('id_proprietario');
+  const vehicleSelect=document.getElementById('id_veiculo');
+  const sealSelect=document.getElementById('id_selo');
+  let timer=null, lastResults=[], currentPerson=null;
+  const initialVehicle=vehicleSelect ? String(vehicleSelect.value||'') : '';
+
+  const esc=s=>String(s??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+  const trigger=(el)=>el&&el.dispatchEvent(new Event('change',{bubbles:true}));
+  const normalize=s=>String(s||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+
+  function vehicleCard(v,active){
+    const seal=v.seal_number ? `<span class="occ-mini-badge ok">Selo ${esc(v.seal_number)}</span>` : '<span class="occ-mini-badge no">Sem selo</span>';
+    return `<button type="button" class="occ-vehicle-option${active?' active':''}" data-vehicle-id="${esc(v.id)}">
+      <span class="occ-vehicle-plate"><small>BRASIL</small>${esc(v.plate)}</span>
+      <span class="occ-vehicle-copy"><strong>${esc(v.description)}</strong><small>${esc(v.type)} · ${esc(v.color||'cor não informada')} · ${esc(v.status)}</small></span>
+      ${seal}
+    </button>`;
+  }
+
+  function selectVehicle(v){
+    if(!vehicleSelect) return;
+    vehicleSelect.value=String(v.id);
+    trigger(vehicleSelect);
+    if(sealSelect){sealSelect.value=v.seal_id ? String(v.seal_id) : '';trigger(sealSelect);}
+    vehiclesBox.querySelectorAll('.occ-vehicle-option').forEach(b=>b.classList.toggle('active',b.dataset.vehicleId===String(v.id)));
+    window.dispatchEvent(new CustomEvent('occ-vehicle-selected',{detail:v}));
+  }
+
+  function renderVehicles(person, preserve=false){
+    const list=person.vehicles||[];
+    if(!list.length){
+      vehiclesBox.innerHTML='<div class="occ-picker-empty warning">Esta pessoa não possui veículo cadastrado.</div>';
+      if(!preserve){if(vehicleSelect){vehicleSelect.value='';trigger(vehicleSelect);}if(sealSelect){sealSelect.value='';trigger(sealSelect);}}
+      return;
+    }
+    let chosen='';
+    if(preserve && initialVehicle && list.some(v=>String(v.id)===initialVehicle)) chosen=initialVehicle;
+    vehiclesBox.innerHTML=list.map(v=>vehicleCard(v,String(v.id)===chosen)).join('');
+    vehiclesBox.querySelectorAll('.occ-vehicle-option').forEach(btn=>btn.addEventListener('click',()=>{
+      const v=list.find(x=>String(x.id)===btn.dataset.vehicleId); if(v) selectVehicle(v);
+    }));
+    if(chosen){const v=list.find(x=>String(x.id)===chosen);if(v) selectVehicle(v);return;}
+    const typed=normalize(search.value);
+    const exact=list.find(v=>normalize(v.plate)===typed);
+    if(exact){selectVehicle(exact);return;}
+    if(list.length===1) selectVehicle(list[0]);
+    else if(!preserve){if(vehicleSelect){vehicleSelect.value='';trigger(vehicleSelect);}if(sealSelect){sealSelect.value='';trigger(sealSelect);}}
+  }
+
+  function selectPerson(person, preserve=false){
+    currentPerson=person;
+    if(ownerSelect){ownerSelect.value=String(person.id);trigger(ownerSelect);}
+    search.value='';
+    results.hidden=true;
+    results.innerHTML='';
+    selected.hidden=false;
+    selected.innerHTML=`<div class="occ-person-avatar">${esc((person.name||'?').trim().charAt(0).toUpperCase())}</div>
+      <div class="occ-person-main"><strong>${esc(person.name)}</strong><span>${esc([person.rank,person.section].filter(Boolean).join(' · ')||'Sem cargo/setor informados')}</span><small>${esc(person.phone||'Telefone não informado')}</small></div>
+      <button type="button" class="occ-change-person">Trocar</button>`;
+    selected.querySelector('.occ-change-person').addEventListener('click',()=>{search.focus();search.select();});
+    renderVehicles(person,preserve);
+    window.dispatchEvent(new CustomEvent('occ-person-selected',{detail:person}));
+  }
+
+  function clearPerson(){
+    currentPerson=null; lastResults=[];
+    search.value=''; results.hidden=true; results.innerHTML=''; selected.hidden=true; selected.innerHTML='';
+    if(ownerSelect){ownerSelect.value='';trigger(ownerSelect);}
+    if(vehicleSelect){vehicleSelect.value='';trigger(vehicleSelect);}
+    if(sealSelect){sealSelect.value='';trigger(sealSelect);}
+    vehiclesBox.innerHTML='<div class="occ-picker-empty">Selecione primeiro a pessoa. Os veículos dela aparecerão aqui.</div>';
+    search.focus();
+    window.dispatchEvent(new CustomEvent('occ-person-selected',{detail:{phone:'',name:''}}));
+  }
+
+  function renderResults(list){
+    lastResults=list;
+    if(!list.length){results.innerHTML='<div class="occ-person-none">Nenhuma pessoa encontrada.</div>';results.hidden=false;return;}
+    results.innerHTML=list.map((p,i)=>{
+      const plates=(p.vehicles||[]).slice(0,4).map(v=>`<span>${esc(v.plate)}</span>`).join('');
+      return `<button type="button" class="occ-person-result" data-result-index="${i}">
+        <span class="occ-result-name"><strong>${esc(p.name)}</strong><small>${esc([p.rank,p.section].filter(Boolean).join(' · ')||'Sem cargo/setor')}</small></span>
+        <span class="occ-result-plates">${plates||'<em>sem veículo</em>'}</span>
+      </button>`;
+    }).join('');
+    results.hidden=false;
+    results.querySelectorAll('.occ-person-result').forEach(b=>b.addEventListener('click',()=>selectPerson(lastResults[Number(b.dataset.resultIndex)])));
+  }
+
+  async function load(params){
+    const url=new URL(searchUrl,window.location.origin);
+    Object.entries(params).forEach(([k,v])=>url.searchParams.set(k,v));
+    results.innerHTML='<div class="occ-person-loading">Buscando...</div>';results.hidden=false;
+    try{
+      const response=await fetch(url,{headers:{'X-Requested-With':'XMLHttpRequest'}});
+      if(!response.ok) throw new Error('HTTP '+response.status);
+      const data=await response.json(); renderResults(data.results||[]);
+      return data.results||[];
+    }catch(e){results.innerHTML='<div class="occ-person-none">Não foi possível pesquisar agora.</div>';results.hidden=false;return [];}
+  }
+
+  search.addEventListener('input',()=>{
+    clearTimeout(timer); const q=search.value.trim();
+    if(q.length<2){results.hidden=true;results.innerHTML='';return;}
+    timer=setTimeout(()=>load({q}),180);
+  });
+  search.addEventListener('keydown',e=>{
+    if(e.key==='Enter' && !results.hidden && lastResults.length){e.preventDefault();selectPerson(lastResults[0]);}
+    if(e.key==='Escape'){results.hidden=true;}
+  });
+  clearBtn.addEventListener('click',clearPerson);
+  document.addEventListener('click',e=>{if(!root.contains(e.target)) results.hidden=true;});
+
+  if(ownerSelect && ownerSelect.value){
+    load({id:ownerSelect.value}).then(list=>{if(list[0]) selectPerson(list[0],true);});
+  }
+})();
+</script>
+
+<script>
+(function(){
+  function appendPhrase(targetId, text){
+    const el=document.getElementById(targetId); if(!el) return;
+    const current=el.value.trim();
+    if(current.toLowerCase().includes(text.toLowerCase())) return;
+    el.value=current ? current.replace(/\s+$/,'')+'\n'+text : text;
+    el.dispatchEvent(new Event('input',{bubbles:true}));
+    el.focus();
+  }
+  document.querySelectorAll('.occ-phrase').forEach(btn=>btn.addEventListener('click',()=>appendPhrase(btn.dataset.target,btn.dataset.text)));
+})();
+</script>
+{% if form.instance.pk %}
+{{ form.instance.numero|json_script:"occ-number-data" }}
+{{ form.instance.proprietario.telefone|default:""|json_script:"occ-phone-data" }}
+<script>
+(function(){
+  const number=JSON.parse(document.getElementById('occ-number-data').textContent);
+  const rawPhone=JSON.parse(document.getElementById('occ-phone-data').textContent);
+  let activePhone=rawPhone;
+  const q=s=>document.querySelector(s);
+  const field=id=>document.getElementById(id);
+  const selectedText=id=>{const el=field(id); return el&&el.selectedOptions&&el.selectedOptions[0]?el.selectedOptions[0].text.trim():''};
+  const plate=()=>{const txt=selectedText('id_veiculo'); return txt.split('—')[0].trim()||'veículo informado'};
+  const owner=()=>selectedText('id_proprietario')||'proprietário';
+  const local=()=>field('id_local')?.value.trim()||'local informado';
+  const description=()=>field('id_descricao')?.value.trim()||'Ocorrência registrada para conferência.';
+  const measures=()=>field('id_providencias')?.value.trim()||'Sem providências adicionais registradas até o momento.';
+  const status=()=>selectedText('id_status')||'situação registrada';
+  const type=()=>selectedText('id_tipo')||'ocorrência';
+  const dateValue=()=>field('id_data_hora')?.value||'';
+  const dateHuman=()=>{const v=dateValue(); if(!v) return 'data registrada'; const d=new Date(v); return Number.isNaN(d.getTime())?v:d.toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'});};
+
+  function template(kind){
+    const who=owner(), p=plate(), d=dateHuman(), l=local(), desc=description(), prov=measures();
+    const base=`Olá, ${who}.`;
+    if(kind==='selo') return `${base}\n\nFoi registrada a ocorrência ${number} referente ao veículo ${p}, em ${d}, no local ${l}, por pendência relacionada ao selo veicular.\n\nRegistro: ${desc}\nProvidências: ${prov}\n\nFavor regularizar a situação junto ao setor responsável.`;
+    if(kind==='documento') return `${base}\n\nFoi registrada a ocorrência ${number} referente ao veículo ${p}, em ${d}, no local ${l}, por pendência documental.\n\nRegistro: ${desc}\nProvidências: ${prov}\n\nFavor apresentar a documentação necessária ao setor responsável.`;
+    if(kind==='comparecimento') return `${base}\n\nSolicitamos seu comparecimento ao setor responsável para tratar da ocorrência ${number}, referente ao veículo ${p}.\n\nTipo: ${type()}\nRegistro: ${desc}\nProvidências: ${prov}`;
+    if(kind==='encerramento') return `${base}\n\nA ocorrência ${number}, referente ao veículo ${p}, foi atualizada para a situação: ${status()}.\n\nRegistro: ${desc}\nProvidências: ${prov}`;
+    return `${base}\n\nFoi registrada a ocorrência ${number} referente ao veículo ${p}, em ${d}, no local ${l}.\n\nTipo: ${type()}\nRegistro: ${desc}\nProvidências: ${prov}\n\nEm caso de dúvida, procure o setor responsável.`;
+  }
+
+  const select=q('#message-template'), message=q('#whatsapp-message'), help=q('#whatsapp-help');
+  function refresh(force=true){if(force||!message.value.trim()) message.value=template(select.value);}
+  select.addEventListener('change',()=>refresh(true));
+  ['id_proprietario','id_veiculo','id_tipo','id_status','id_data_hora','id_local','id_descricao','id_providencias'].forEach(id=>field(id)?.addEventListener('change',()=>refresh(true)));
+  refresh(true);
+
+  q('#copy-message').addEventListener('click',async()=>{
+    try{await navigator.clipboard.writeText(message.value); help.textContent='Mensagem copiada.';}
+    catch(e){message.focus();message.select();document.execCommand('copy');help.textContent='Mensagem copiada.';}
+  });
+
+  function whatsappNumber(raw){
+    let digits=(raw||'').replace(/\D/g,'');
+    if(digits.length===10||digits.length===11) digits='55'+digits;
+    return /^55\d{10,11}$/.test(digits)?digits:'';
+  }
+  const whats=q('#open-whatsapp');
+  function refreshWhatsApp(){
+    const phone=whatsappNumber(activePhone);
+    whats.disabled=!phone;
+    if(!phone) help.textContent='Telefone ausente ou fora do formato esperado. Use “Copiar mensagem”.';
+    else if(help.textContent.startsWith('Telefone ausente')) help.textContent='';
+    whats.dataset.phone=phone;
+  }
+  refreshWhatsApp();
+  window.addEventListener('occ-person-selected',e=>{activePhone=e.detail?.phone||'';refreshWhatsApp();refresh(true);});
+  whats.addEventListener('click',()=>{const phone=whats.dataset.phone||'';if(!phone)return;window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message.value)}`,'_blank','noopener');});
+
+  q('#print-message').addEventListener('click',()=>{
+    q('#print-date').textContent=dateHuman();
+    q('#print-plate').textContent=plate();
+    q('#print-owner').textContent=owner();
+    q('#print-local').textContent=local();
+    q('#print-message-body').textContent=message.value;
+    window.print();
+  });
+})();
+</script>
+{% endif %}
+{% endblock %}

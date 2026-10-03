@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block title %}Meu cadastro{% endblock %}
+{% block content %}
+<div class="page-head"><div><p class="eyebrow">CADASTRO</p><h1>Meus dados</h1><p>Informações pessoais e funcionais usadas nos selos.</p></div></div>
+<section class="card"><form method="post" class="form-grid">{% csrf_token %}{{ form.as_div }}<div class="form-actions"><button class="button primary" type="submit">Salvar alterações</button></div></form></section>
+{% endblock %}

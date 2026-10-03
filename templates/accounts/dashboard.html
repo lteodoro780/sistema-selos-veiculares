@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+{% block title %}Painel | Veículos{% endblock %}
+{% block content %}
+<section class="vh-shell" data-vehicle-hub>
+  <div class="vh-main">
+    <header class="vh-head">
+      <div>
+        <p class="eyebrow">PAINEL PRINCIPAL</p>
+        <h1>Veículos</h1>
+        <p>Procure pela placa. O proprietário, o selo e os dados do veículo aparecem juntos.</p>
+      </div>
+      <div class="vh-summary" aria-label="Resumo dos veículos">
+        <div><strong>{{ vehicle_total }}</strong><span>veículos</span></div>
+        <div><strong>{{ vehicles_with_active_seal }}</strong><span>com selo ativo</span></div>
+        <div class="vh-summary-alert"><strong>{{ vehicles_without_active_seal }}</strong><span>sem selo ativo</span></div>
+      </div>
+    </header>
+
+    <form method="get" class="vh-search" id="vehicle-hub-form" action="{% url 'accounts:dashboard' %}">
+      <label class="sr-only" for="vehicle-q">Buscar veículo</label>
+      <input
+        id="vehicle-q"
+        type="search"
+        name="q"
+        value="{{ q }}"
+        autocomplete="off"
+        placeholder="Digite a placa, o nome, a seção, marca ou modelo (atalho: /)"
+        aria-label="Buscar veículo"
+        autofocus
+      >
+      {% if type_filter %}<input type="hidden" name="tipo" value="{{ type_filter }}">{% endif %}
+      {% if seal_filter %}<input type="hidden" name="selo" value="{{ seal_filter }}">{% endif %}
+      <button type="submit" class="vh-search-button">Buscar</button>
+    </form>
+
+    <nav class="vh-filters" aria-label="Filtros de veículos">
+      <a class="vh-chip {% if not type_filter and not seal_filter %}active{% endif %}" href="{% url 'accounts:dashboard' %}{% if q %}?q={{ q|urlencode }}{% endif %}">Todos</a>
+      <a class="vh-chip {% if type_filter == 'carro' %}active{% endif %}" href="{% url 'accounts:dashboard' %}?tipo=carro{% if q %}&q={{ q|urlencode }}{% endif %}{% if seal_filter %}&selo={{ seal_filter }}{% endif %}">Carros</a>
+      <a class="vh-chip {% if type_filter == 'moto' %}active{% endif %}" href="{% url 'accounts:dashboard' %}?tipo=moto{% if q %}&q={{ q|urlencode }}{% endif %}{% if seal_filter %}&selo={{ seal_filter }}{% endif %}">Motos</a>
+      <a class="vh-chip {% if seal_filter == 'sem' %}active{% endif %}" href="{% url 'accounts:dashboard' %}?selo=sem{% if q %}&q={{ q|urlencode }}{% endif %}{% if type_filter %}&tipo={{ type_filter }}{% endif %}">Sem selo</a>
+      <a class="vh-chip {% if seal_filter == 'com' %}active{% endif %}" href="{% url 'accounts:dashboard' %}?selo=com{% if q %}&q={{ q|urlencode }}{% endif %}{% if type_filter %}&tipo={{ type_filter }}{% endif %}">Com selo</a>
+      <span class="vh-result-count">{{ filtered_count }} resultado{{ filtered_count|pluralize }}</span>
+    </nav>
+
+    <div class="vh-grid" id="vehicle-grid">
+      {% for item in page_obj.object_list %}
+      <article class="vh-card-wrap">
+        <button
+          type="button"
+          class="vh-card"
+          data-vehicle-card
+          data-detail-id="vehicle-detail-{{ item.pk }}"
+          aria-pressed="false"
+        >
+          <div class="vh-plate">
+            <div class="vh-plate-top"><span>BRASIL</span><span>{{ item.get_tipo_display|upper }}</span></div>
+            <div class="vh-plate-number">{{ item.placa }}</div>
+          </div>
+          <div class="vh-card-person">
+            <strong>{{ item.proprietario.nome_exibicao }}</strong>
+            <span>{{ item.proprietario.cargo|default:item.proprietario.get_classe_funcional_display }}{% if item.proprietario.secao %} · {{ item.proprietario.secao }}{% endif %}</span>
+          </div>
+          <div class="vh-card-vehicle">{{ item.marca }} {{ item.modelo }} · {{ item.cor }}</div>
+          {% if item.dashboard_has_active_seal %}
+            <span class="vh-tag ok">Selo ativo</span>
+          {% elif item.dashboard_seal %}
+            <span class="vh-tag warn">Selo {{ item.dashboard_seal.get_status_display|lower }}</span>
+          {% else %}
+            <span class="vh-tag no">Sem selo</span>
+          {% endif %}
+        </button>
+
+        <div id="vehicle-detail-{{ item.pk }}" class="vh-detail-source" hidden>
+          <div class="vh-detail-inner">
+            <div class="vh-plate vh-plate-large">
+              <div class="vh-plate-top"><span>BRASIL</span><span>{{ item.get_tipo_display|upper }}</span></div>
+              <div class="vh-plate-number">{{ item.placa }}</div>
+            </div>
+
+            <div class="vh-detail-title">
+              <h2>{{ item.proprietario.nome_exibicao }}</h2>
+              <p>{{ item.proprietario.cargo|default:item.proprietario.get_classe_funcional_display }}{% if item.proprietario.secao %} · {{ item.proprietario.secao }}{% endif %}</p>
+            </div>
+
+            {% if item.dashboard_has_active_seal %}
+              <span class="vh-tag ok">Selo ativo</span>
+            {% elif item.dashboard_seal %}
+              <span class="vh-tag warn">Selo {{ item.dashboard_seal.get_status_display }}</span>
+            {% else %}
+              <span class="vh-tag no">Sem selo</span>
+            {% endif %}
+
+            <dl class="vh-detail-list">
+              <dt>Veículo</dt><dd>{{ item.marca }} {{ item.modelo }}</dd>
+              <dt>Cor</dt><dd>{{ item.cor }}</dd>
+              <dt>Tipo</dt><dd>{{ item.get_tipo_display }}</dd>
+              <dt>Ano</dt><dd>{{ item.ano_fabricacao }}/{{ item.ano_modelo }}</dd>
+              <dt>Situação</dt><dd>{{ item.get_status_display }}</dd>
+              <dt>Proprietário</dt><dd>{{ item.proprietario.nome_exibicao }}</dd>
+              <dt>Telefone</dt><dd>{{ item.proprietario.telefone|default:"Não informado" }}</dd>
+              {% if item.dashboard_seal %}
+                <dt>Selo</dt><dd>{{ item.dashboard_seal.numero_serial }}</dd>
+                <dt>Validade</dt><dd>{% if item.dashboard_seal.validade %}{{ item.dashboard_seal.validade|date:"d/m/Y" }}{% else %}Não definida{% endif %}</dd>
+              {% endif %}
+            </dl>
+
+            {% if not item.proprietario.cadastro_aprovado %}
+              <div class="vh-warning">Cadastro do proprietário ainda não aprovado.</div>
+            {% endif %}
+            {% if item.status != 'APROVADO' %}
+              <div class="vh-warning">Veículo: {{ item.get_status_display }}{% if item.motivo_status %} · {{ item.motivo_status }}{% endif %}</div>
+            {% endif %}
+
+            <div class="vh-actions">
+              {% if item.dashboard_seal %}
+                <a class="button primary" href="{% url 'seals:list' %}?q={{ item.placa|urlencode }}">Abrir selo</a>
+              {% else %}
+                <a class="button primary" href="{% url 'operations:link-seal' %}">Vincular selo</a>
+              {% endif %}
+              <a class="button secondary" href="{% url 'operations:user-detail' item.proprietario_id %}">Ver pessoa</a>
+              <a class="button secondary" href="{% url 'vehicles:edit' item.pk %}">Editar veículo</a>
+              <a class="button secondary" href="{% url 'operations:occurrence-create' %}">Registrar ocorrência</a>
+            </div>
+          </div>
+        </div>
+      </article>
+      {% empty %}
+      <div class="vh-empty">
+        <strong>Nenhum veículo encontrado.</strong>
+        <span>Confira a placa ou remova algum filtro.</span>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% if page_obj.paginator.num_pages > 1 %}
+    <nav class="vh-pagination" aria-label="Paginação de veículos">
+      <span>Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+      <div>
+        {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q|urlencode }}{% endif %}{% if type_filter %}&tipo={{ type_filter }}{% endif %}{% if seal_filter %}&selo={{ seal_filter }}{% endif %}">← Anterior</a>{% endif %}
+        {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q|urlencode }}{% endif %}{% if type_filter %}&tipo={{ type_filter }}{% endif %}{% if seal_filter %}&selo={{ seal_filter }}{% endif %}">Próxima →</a>{% endif %}
+      </div>
+    </nav>
+    {% endif %}
+  </div>
+
+  <aside class="vh-detail" id="vehicle-detail" aria-live="polite">
+    {% if page_obj.object_list %}
+      <div class="vh-detail-placeholder">Selecione um veículo para ver os detalhes.</div>
+    {% else %}
+      <div class="vh-detail-placeholder">Nenhum veículo disponível neste filtro.</div>
+    {% endif %}
+  </aside>
+</section>
+
+<script>
+(function () {
+  const hub = document.querySelector('[data-vehicle-hub]');
+  if (!hub) return;
+
+  const cards = Array.from(hub.querySelectorAll('[data-vehicle-card]'));
+  const detail = document.getElementById('vehicle-detail');
+  const form = document.getElementById('vehicle-hub-form');
+  const search = document.getElementById('vehicle-q');
+  let timer = null;
+
+  function selectCard(card) {
+    const source = document.getElementById(card.dataset.detailId);
+    if (!source || !detail) return;
+    cards.forEach(item => item.setAttribute('aria-pressed', item === card ? 'true' : 'false'));
+    detail.innerHTML = source.innerHTML;
+  }
+
+  cards.forEach(card => card.addEventListener('click', () => selectCard(card)));
+  if (cards.length) selectCard(cards[0]);
+
+  document.addEventListener('keydown', event => {
+    if (event.key === '/' && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) {
+      event.preventDefault();
+      search && search.focus();
+    }
+  });
+
+  if (search && form) {
+    search.addEventListener('input', () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => form.requestSubmit(), 650);
+    });
+  }
+})();
+</script>
+{% endblock %}

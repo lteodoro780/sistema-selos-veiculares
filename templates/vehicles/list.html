@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block title %}Veículos{% endblock %}
+{% block content %}
+<div class="page-head"><div><p class="eyebrow">CADASTROS</p><h1>Veículos</h1><p>Todos os veículos e seus proprietários.</p></div><a class="button primary" href="{% url 'vehicles:create' %}">Adicionar veículo</a></div>
+<section class="card table-card"><div class="table-wrap"><table><thead><tr><th>Placa</th><th>Proprietário</th><th>Veículo</th><th>Ano</th><th>Situação</th><th></th></tr></thead><tbody>{% for item in vehicles %}<tr><td><strong>{{ item.placa }}</strong></td><td><a href="{% url 'people:detail' item.proprietario_id %}">{{ item.proprietario }}</a></td><td>{{ item.marca }} {{ item.modelo }} · {{ item.cor }}</td><td>{{ item.ano_fabricacao }}/{{ item.ano_modelo }}</td><td><span class="badge {{ item.status|lower }}">{{ item.get_status_display }}</span>{% if item.motivo_status %}<small class="row-note">{{ item.motivo_status }}</small>{% endif %}</td><td><a href="{% url 'vehicles:edit' item.pk %}">Editar</a></td></tr>{% empty %}<tr><td colspan="6" class="empty">Nenhum veículo cadastrado.</td></tr>{% endfor %}</tbody></table></div></section>
+{% endblock %}

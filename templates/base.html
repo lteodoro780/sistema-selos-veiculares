@@ -1,0 +1,53 @@
+{% load static %}
+<!doctype html>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Sistema de Selos{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/app.css' %}">
+    <link rel="stylesheet" href="{% static 'css/people.css' %}">
+    <link rel="stylesheet" href="{% static 'css/work-portal.css' %}">
+    <link rel="stylesheet" href="{% static 'css/lpr.css' %}">
+    <link rel="stylesheet" href="{% static 'css/occurrences-ops.css' %}">
+    <link rel="stylesheet" href="{% static 'css/lpr-manual.css' %}">
+    <link rel="stylesheet" href="{% static 'css/lpr-portaria.css' %}">
+    <link rel="stylesheet" href="{% static 'css/dashboard-vehicles.css' %}">
+</head>
+<body class="{% if not request.user.is_authenticated %}auth-page{% endif %}">
+{% if request.user.is_authenticated %}
+<aside class="sidebar">
+    <div class="brand"><div><strong>SELO <span>VEICULAR</span></strong><small>Portal de operações</small></div></div>
+    <nav>
+        <a href="{% url 'accounts:dashboard' %}"><span>⌂</span>Painel</a>
+        <a href="{% url 'people:list' %}"><span>●</span>Cadastros · Pessoas</a>
+        <a href="{% url 'people:incomplete' %}"><span>◷</span>Cadastros incompletos</a>
+        <a href="{% url 'vehicles:list' %}"><span>▰</span>Veículos</a>
+        <a href="{% url 'documents:list' %}"><span>▤</span>Documentos</a>
+        <a href="{% url 'seals:list' %}"><span>▦</span>Selos</a>
+        <div class="nav-label">Operação</div>
+        <a href="{% url 'seals:mobile' %}"><span>▣</span>Ler QR · Celular</a>
+        <a href="{% url 'operations:dashboard' %}"><span>◫</span>Visão operacional</a>
+        <a href="{% url 'lpr:list' %}"><span>▧</span>Placas / Movimentações</a>
+        <a href="{% url 'operations:occurrence-list' %}"><span>!</span>Ocorrências</a>
+        <a href="{% url 'operations:link-seal' %}"><span>▦</span>Vincular selo</a>
+        <a href="{% url 'accounts:csv-import' %}"><span>⇧</span>Importar planilha</a>
+        <a href="{% url 'reports:index' %}"><span>▥</span>Relatórios</a>
+        {% if request.user.is_superuser or request.user.role == "ADMINISTRADOR" %}
+        <a href="{% url 'admin:index' %}"><span>⚙</span>Administração</a>
+        {% endif %}
+    </nav>
+    <form method="post" action="{% url 'accounts:logout' %}" class="logout">{% csrf_token %}<button type="submit">Sair</button></form>
+</aside>
+<main class="app-main">
+    <header class="topbar"><span class="system-title">SISTEMA DE IDENTIFICAÇÃO VEICULAR</span><div><strong>{{ request.user.nome_exibicao }}</strong><small>{{ request.user.identificacao_funcional }}</small></div><span class="status-pill">{{ request.user.get_role_display }}</span></header>
+    <div class="content"><div class="notice warning">DEMONSTRAÇÃO · Use somente dados fictícios.</div>
+{% else %}
+<main class="auth-main">
+{% endif %}
+        {% if messages %}<div class="messages">{% for message in messages %}<div class="message {{ message.tags }}">{{ message }}</div>{% endfor %}</div>{% endif %}
+        {% block content %}{% endblock %}
+{% if request.user.is_authenticated %}</div>{% endif %}
+</main>
+</body>
+</html>

@@ -1,0 +1,21 @@
+[Unit]
+Description=Selos Veiculares - coletor LPR Hikvision
+After=network-online.target selos-linux.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=SEU_USUARIO
+WorkingDirectory=/home/SEU_USUARIO/sistema-selos-veiculares-demo
+EnvironmentFile=/etc/selos-lpr.env
+ExecStart=/home/SEU_USUARIO/sistema-selos-veiculares-demo/.venv/bin/python /home/SEU_USUARIO/sistema-selos-veiculares-demo/manage.py coletar_lpr
+Restart=always
+RestartSec=5
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target

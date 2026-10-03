@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}{{ person.nome_exibicao }} | Operações{% endblock %}
+{% block content %}
+<div class="notice {% if person.missing_fields %}warning{% endif %}">
+    <strong>{{ person.completion_status }}</strong>
+    {% if person.missing_fields %} · {% for key,label in person.missing_fields %}{{ label }}{% if not forloop.last %} · {% endif %}{% endfor %}{% endif %}
+    {% if person.reviewed_at %} · Conferido por {{ person.reviewed_by.nome_exibicao }} em {{ person.reviewed_at|date:"d/m/Y H:i" }}{% endif %}
+</div>
+
+<div class="page-head sv-person-head">
+    <div>
+        <a class="back-link" href="{% url 'operations:dashboard' %}">← Voltar para a visão operacional</a>
+        <p class="eyebrow">PESSOA CADASTRADA</p>
+        <div class="sv-person-title-row">
+            <h1>{{ person.nome_exibicao }}</h1>
+            <span class="badge large {% if person.cadastro_aprovado %}aprovado{% else %}pendente{% endif %}">{% if person.cadastro_aprovado %}Cadastro aprovado{% else %}Aguardando aprovação{% endif %}</span>
+            <span class="badge large {% if person.is_active %}ativo{% else %}rejeitado{% endif %}">{% if person.is_active %}Ativo{% else %}Inativo{% endif %}</span>
+        </div>
+        <p>{{ person.cargo|default:person.get_classe_funcional_display }}{% if person.secao %} · {{ person.secao }}{% endif %} · cadastro #{{ person.pk }}</p>
+    </div>
+    <div class="actions">
+        <a class="button secondary" href="{% url 'people:edit' person.pk %}">Editar cadastro</a>
+        <a class="button secondary" href="{% url 'operations:link-seal' %}">Vincular selo</a>
+        <a class="button primary" href="{% url 'operations:occurrence-create' %}">Registrar ocorrência</a>
+    </div>
+</div>
+
+<div class="stats-grid compact-stats sv-kpi-grid sv-person-kpis">
+    <div class="stat-card sv-kpi"><span>CARROS</span><strong>{{ car_count }}</strong><small>veículos cadastrados</small></div>
+    <div class="stat-card sv-kpi"><span>MOTOS</span><strong>{{ motorcycle_count }}</strong><small>veículos cadastrados</small></div>
+    <div class="stat-card sv-kpi"><span>SELOS ATIVOS</span><strong>{{ active_seal_count }}</strong><small>vínculos atualmente ativos</small></div>
+    <div class="stat-card sv-kpi"><span>MOVIMENTAÇÕES</span><strong>{{ plate_passage_count }}</strong><small>{% if last_plate_passage %}última {{ last_plate_passage.captured_at|date:"d/m H:i" }}{% else %}nenhuma leitura vinculada{% endif %}</small></div>
+</div>
+
+{% if last_plate_passage %}
+<section class="sv-last-passage">
+    <div><span>ÚLTIMA LEITURA NO PORTÃO</span><strong class="sv-plate-tag">{{ last_plate_passage.plate }}</strong></div>
+    <div><span>DATA / HORA</span><strong>{{ last_plate_passage.captured_at|date:"d/m/Y H:i:s" }}</strong></div>
+    <div><span>MOVIMENTO</span><strong>{{ last_plate_passage.get_movement_display }}</strong></div>
+    <div><span>CÂMERA</span><strong>{{ last_plate_passage.camera_name }}</strong></div>
+    <a href="{% url 'lpr:list' %}?q={{ last_plate_passage.plate|urlencode }}">Ver histórico de placas</a>
+</section>
+{% endif %}
+
+<section class="card sv-detail-card">
+    <div class="card-head"><h2>Dados da pessoa</h2><p>Identificação e dados de contato do cadastro.</p></div>
+    <dl class="detail-grid">
+        <div><dt>Nome completo</dt><dd>{{ person.get_full_name|default:"Não informado" }}</dd></div>
+        <div><dt>Nome preferido</dt><dd>{{ person.nome_preferido|default:"Não informado" }}</dd></div>
+        <div><dt>CPF</dt><dd>{{ masked_cpf }}</dd></div>
+        <div><dt>Vínculo</dt><dd>{{ person.get_vinculo_display }}</dd></div>
+        <div><dt>Classe funcional</dt><dd>{{ person.get_classe_funcional_display }}</dd></div>
+        <div><dt>Cargo</dt><dd>{{ person.cargo|default:"Não informada" }}</dd></div>
+        <div><dt>Identidade funcional</dt><dd>{{ person.identidade_funcional|default:"Não informada" }}</dd></div>
+        <div><dt>Organização</dt><dd>{{ person.organizacao|default:"Não informada" }}</dd></div>
+        <div><dt>Seção / setor</dt><dd>{{ person.secao|default:"Não informada" }}</dd></div>
+        <div><dt>Telefone</dt><dd>{{ person.telefone|default:"Não informado" }}</dd></div>
+        <div><dt>Ramal</dt><dd>{{ person.ramal|default:"Não informado" }}</dd></div>
+        <div><dt>E-mail</dt><dd>{{ person.email|default:"Não informado" }}</dd></div>
+    </dl>
+</section>
+
+<section class="card table-card sv-vehicle-card">
+    <div class="card-head padded"><h2>Veículos</h2><p>{{ car_count }} carro{{ car_count|pluralize }} · {{ motorcycle_count }} moto{{ motorcycle_count|pluralize }}</p></div>
+    <div class="table-wrap">
+        <table class="sv-data-table">
+            <thead><tr><th>Tipo</th><th>Veículo</th><th>Placa</th><th>Situação</th><th>Selo e QR Code</th></tr></thead>
+            <tbody>
+                {% for item in cars %}
+                <tr><td>Carro</td><td><strong>{{ item.marca }} {{ item.modelo }}</strong><small class="table-subtitle">{{ item.cor }} · {{ item.ano_modelo }}</small></td><td><strong class="sv-plate-tag">{{ item.placa }}</strong></td><td><span class="badge {{ item.status|lower }}">{{ item.get_status_display }}</span></td><td>{% if item.selo %}<strong class="sv-mono">{{ item.selo.numero_serial }}</strong><small class="table-subtitle"><span class="badge {{ item.selo.status|lower }}">{{ item.selo.get_status_display }}</span> · <a href="{% url 'seals:qr' item.selo.pk %}" target="_blank">Abrir QR Code</a> · <a href="{% url 'seals:pdf' item.selo.pk %}">Baixar PDF</a></small>{% else %}<span class="muted">Sem selo</span>{% endif %}</td></tr>
+                {% endfor %}
+                {% for item in motorcycles %}
+                <tr><td>Moto</td><td><strong>{{ item.marca }} {{ item.modelo }}</strong><small class="table-subtitle">{{ item.cor }} · {{ item.ano_modelo }}</small></td><td><strong class="sv-plate-tag">{{ item.placa }}</strong></td><td><span class="badge {{ item.status|lower }}">{{ item.get_status_display }}</span></td><td>{% if item.selo %}<strong class="sv-mono">{{ item.selo.numero_serial }}</strong><small class="table-subtitle"><span class="badge {{ item.selo.status|lower }}">{{ item.selo.get_status_display }}</span> · <a href="{% url 'seals:qr' item.selo.pk %}" target="_blank">Abrir QR Code</a> · <a href="{% url 'seals:pdf' item.selo.pk %}">Baixar PDF</a></small>{% else %}<span class="muted">Sem selo</span>{% endif %}</td></tr>
+                {% empty %}{% if not cars %}<tr><td colspan="5" class="empty">Nenhum veículo cadastrado.</td></tr>{% endif %}{% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<div class="two-cols detail-columns">
+    <section class="card"><div class="card-head"><h2>CNH</h2></div>{% for item in driver_documents %}<div class="summary-row"><div><strong>CNH {{ item.numero }}</strong><small>Categoria {{ item.categoria }} · validade {{ item.validade|date:"d/m/Y" }}</small></div><span class="badge {{ item.status|lower }}">{{ item.get_status_display }}</span></div>{% empty %}<p class="empty">Nenhuma CNH enviada.</p>{% endfor %}</section>
+    <section class="card"><div class="card-head"><h2>CRLV</h2></div>{% for item in vehicle_documents %}<div class="summary-row"><div><strong>{{ item.veiculo.placa }}</strong><small>Exercício {{ item.exercicio }}</small></div><span class="badge {{ item.status|lower }}">{{ item.get_status_display }}</span></div>{% empty %}<p class="empty">Nenhum CRLV enviado.</p>{% endfor %}</section>
+</div>
+
+<section class="card table-card sv-movement-card">
+    <div class="card-head padded">
+        <div><h2>Movimentação dos veículos</h2><p>{{ plate_passage_count }} passagem{{ plate_passage_count|pluralize }} vinculada{{ plate_passage_count|pluralize }} automaticamente pela placa.</p></div>
+        <a class="table-action" href="{% url 'lpr:list' %}?q={{ person.nome_exibicao|urlencode }}">Ver todas</a>
+    </div>
+    <div class="table-wrap"><table class="lpr-table sv-data-table"><thead><tr><th>Imagem</th><th>Data / hora</th><th>Placa</th><th>Movimento</th><th>Veículo</th><th>Câmera</th></tr></thead><tbody>{% for item in plate_passages %}<tr><td>{% if item.plate_image %}<a href="{% url 'lpr:image' item.pk %}" target="_blank"><img class="lpr-thumb" src="{% url 'lpr:image' item.pk %}" alt="Placa {{ item.plate }}"></a>{% else %}<span class="muted">Sem imagem</span>{% endif %}</td><td><strong>{{ item.captured_at|date:"d/m/Y H:i:s" }}</strong><small class="table-subtitle">{{ item.get_camera_direction_display }}</small></td><td><strong class="sv-plate-tag">{{ item.plate }}</strong>{% if item.raw_plate and item.raw_plate != item.plate %}<small class="table-subtitle">Lida: {{ item.raw_plate }} · OCR</small>{% endif %}</td><td><span class="badge lpr-{{ item.movement|lower }}">{{ item.get_movement_display }}</span></td><td>{{ item.vehicle.marca }} {{ item.vehicle.modelo }}</td><td>{{ item.camera_name }}<small class="table-subtitle">faixa {{ item.lane|default:"—" }}</small></td></tr>{% empty %}<tr><td colspan="6" class="empty">Nenhuma movimentação vinculada a esta pessoa.</td></tr>{% endfor %}</tbody></table></div>
+</section>
+
+<section class="card table-card"><div class="card-head padded"><h2>Ocorrências recentes</h2><p>{{ open_occurrence_count }} ocorrência{{ open_occurrence_count|pluralize }} aberta{{ open_occurrence_count|pluralize }}.</p></div><div class="table-wrap"><table class="sv-data-table"><thead><tr><th>Número</th><th>Data</th><th>Tipo</th><th>Veículo</th><th>Local</th><th>Situação</th><th></th></tr></thead><tbody>{% for item in occurrences %}<tr><td><strong>{{ item.numero }}</strong></td><td>{{ item.data_hora|date:"d/m/Y H:i" }}</td><td>{{ item.get_tipo_display }}</td><td><span class="sv-mono">{{ item.veiculo.placa }}</span></td><td>{{ item.local }}</td><td><span class="badge {{ item.status|lower }}">{{ item.get_status_display }}</span></td><td><a href="{% url 'operations:occurrence-edit' item.pk %}">Abrir</a></td></tr>{% empty %}<tr><td colspan="7" class="empty">Nenhuma ocorrência registrada para esta pessoa.</td></tr>{% endfor %}</tbody></table></div></section>
+
+<section class="card"><div class="card-head"><h2>Histórico de preenchimento</h2></div>{% for change in person.changes.all|slice:":30" %}<div class="summary-row"><div><strong>{{ change.source }}</strong><small>{{ change.at|date:"d/m/Y H:i" }} · {{ change.actor.nome_exibicao|default:"Migração do cadastro" }}</small><ul class="audit-changes">{% for field,values in change.changes.items %}<li>{{ field }}: {{ values.before|default:"Vazio" }} → {{ values.after|default:"Vazio" }}</li>{% endfor %}</ul></div></div>{% empty %}<p class="muted">Nenhuma alteração de preenchimento registrada desde a atualização.</p>{% endfor %}</section>
+{% endblock %}

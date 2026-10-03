@@ -1,0 +1,25 @@
+{% extends "seals/mobile_base.html" %}
+{% load static %}
+{% block content %}
+<div class="intro"><p class="eyebrow">VERIFICAÇÃO DE SELOS</p><h1>Aponte. Leia. Confira.</h1><p>Veja a situação do selo e os dados do veículo no banco do sistema.</p></div>
+{% if error %}<div class="notice error" role="alert"><strong>Não foi possível validar</strong><p>{{ error }}</p></div>{% endif %}
+<section class="scanner-card" aria-label="Leitura pela câmera">
+  <div class="camera-stage">
+    <video id="qr-video" muted playsinline aria-label="Imagem da câmera para ler o selo"></video>
+    <div id="camera-placeholder"><span class="scan-glyph" aria-hidden="true">▣</span><strong>Câmera pronta para iniciar</strong><p>Posicione o QR dentro da área de leitura.</p></div>
+    <div class="scan-frame" aria-hidden="true"></div>
+    <span class="camera-label">LEITURA SEGURA · SEM SALVAR IMAGENS</span>
+  </div>
+  <div class="camera-controls"><p id="camera-status" role="status" aria-live="polite">Toque em abrir câmera e permita o acesso no navegador.</p><button id="camera-start" type="button" class="button primary">Abrir câmera</button><div class="camera-actions"><button id="camera-stop" type="button" class="button secondary" hidden>Parar câmera</button><button id="camera-flip" type="button" class="button secondary" hidden>Trocar câmera</button></div></div>
+</section>
+<div id="secure-warning" class="notice" hidden><strong>A câmera precisa de conexão segura</strong><p>No celular, abra o endereço HTTPS configurado para este sistema, com certificado confiável. Consulte o GUIA_LINUX.md. Um endereço HTTP com o IP do computador não libera a câmera.</p></div>
+<section class="mobile-card"><h2>Outras formas de consultar</h2><p class="muted">Você também pode ler uma foto ou digitar o número impresso no selo.</p>
+  <label class="button secondary photo-button" for="qr-photo">Escolher foto do QR Code<input id="qr-photo" type="file" accept="image/*"></label>
+  <form method="post" id="lookup-form" class="manual-form">{% csrf_token %}<label for="seal-code">Número do selo ou conteúdo do QR</label><input id="seal-code" name="code" maxlength="2048" placeholder="Ex.: SV-2026-AB12CD34" autocomplete="off" autocapitalize="off" spellcheck="false" required><button class="button secondary" type="submit">Consultar no banco</button></form>
+</section>
+<noscript><div class="notice">Ative o JavaScript para usar a câmera. A consulta pelo número funciona no formulário acima.</div></noscript>
+<p class="footnote">Acesso de Administrador e Patrulhante. As imagens são processadas neste aparelho; não são enviadas nem armazenadas. A consulta de validade exige conexão com o computador.</p>
+<canvas id="qr-canvas" hidden></canvas>
+<script src="{% static 'vendor/jsQR-1.4.0.js' %}" defer></script>
+<script src="{% static 'js/seal-scanner.js' %}" defer></script>
+{% endblock %}

@@ -1,0 +1,43 @@
+# Configuração e segredos locais
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+credentials*.json
+
+# Dados, anexos, backups e exportações
+data/
+media/
+backups/
+_backup*/
+*.sqlite*
+*.db
+*.sql
+*.dump
+*.csv
+*.tsv
+*.xlsx
+*.xls
+*.log
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+
+# Ambiente e arquivos gerados
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+staticfiles/
+.pytest_cache/
+.coverage
+htmlcov/
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+screenshots-private/

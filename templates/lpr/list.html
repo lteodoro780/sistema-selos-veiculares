@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+{% block title %}Placas e movimentações | Sistema de Selos{% endblock %}
+{% block content %}
+<div class="page-head sv-page-head sv-lpr-portaria-head">
+    <div>
+        <p class="eyebrow">PORTARIA · LEITURA AUTOMÁTICA</p>
+        <h1>Placas e movimentações</h1>
+        <p>Clique em qualquer passagem para revisar a foto, corrigir a placa e ensinar o filtro sem sair da tela.</p>
+    </div>
+    <div class="actions">
+        <a class="button secondary" href="{% url 'lpr:list' %}">Atualizar</a>
+    </div>
+</div>
+
+<section class="sv-lpr-portaria-summary">
+    <div class="sv-lpr-focus-card">
+        <div class="sv-lpr-focus-number">{{ today_count }}</div>
+        <div>
+            <span class="sv-lpr-focus-kicker">MOVIMENTAÇÃO DE HOJE</span>
+            <h2>leituras capturadas</h2>
+            <p>{{ matched_count }} passagem{{ matched_count|pluralize }} vinculada{{ matched_count|pluralize }} ao cadastro e {{ unmatched_count }} ainda sem vínculo.</p>
+            {% if review_count %}<a class="button sv-lpr-amber" href="{% url 'lpr:list' %}?metodo=REVISAO">Revisar {{ review_count }} pendência{{ review_count|pluralize }}</a>{% endif %}
+        </div>
+    </div>
+    <div class="sv-lpr-side-stats">
+        <a href="{% url 'lpr:list' %}"><span>Total armazenado</span><strong>{{ total }}</strong></a>
+        <a href="{% url 'lpr:list' %}?vinculo=sim"><span>Vinculadas</span><strong>{{ matched_count }}</strong></a>
+        <a href="{% url 'lpr:list' %}?vinculo=nao"><span>Não cadastradas</span><strong>{{ unmatched_count }}</strong></a>
+        <a href="{% url 'lpr:list' %}?metodo=REVISAO"><span>Precisam revisão</span><strong>{{ review_count }}</strong></a>
+    </div>
+</section>
+
+<div class="sv-lpr-live-feed" aria-label="Últimas leituras">
+    <span class="sv-lpr-feed-label">Últimas leituras</span>
+    {% for item in page|slice:":8" %}
+        <button type="button" class="sv-lpr-feed-chip {% if forloop.first %}novo{% endif %}" data-open-review="lpr-review-{{ item.pk }}">
+            <strong>{{ item.plate }}</strong>
+            <span>{{ item.captured_at|date:"H:i:s" }}</span>
+        </button>
+    {% empty %}
+        <span class="muted">Nenhuma leitura registrada.</span>
+    {% endfor %}
+</div>
+
+<section class="card table-card sv-lpr-portaria-panel">
+    <div class="sv-directory-tabs sv-lpr-tabs sv-lpr-portaria-tabs">
+        <a class="{% if not request.GET.movimento and not request.GET.vinculo and not request.GET.metodo %}active{% endif %}" href="{% url 'lpr:list' %}">Todas</a>
+        <a class="{% if request.GET.vinculo == 'sim' %}active{% endif %}" href="{% url 'lpr:list' %}?vinculo=sim">Cadastradas</a>
+        <a class="{% if request.GET.vinculo == 'nao' %}active{% endif %}" href="{% url 'lpr:list' %}?vinculo=nao">Não cadastradas</a>
+        <a class="{% if request.GET.metodo == 'MANUAL' %}active{% endif %}" href="{% url 'lpr:list' %}?metodo=MANUAL">Corrigidas</a>
+        <a class="{% if request.GET.metodo == 'APRENDIDA' %}active{% endif %}" href="{% url 'lpr:list' %}?metodo=APRENDIDA">Aprendidas</a>
+        <a class="{% if request.GET.metodo == 'REVISAO' %}active{% endif %}" href="{% url 'lpr:list' %}?metodo=REVISAO">Revisão{% if review_count %} ({{ review_count }}){% endif %}</a>
+        <span>{{ page.paginator.count }} resultado{{ page.paginator.count|pluralize }}</span>
+    </div>
+
+    <form method="get" class="filter-bar lpr-filter sv-searchbar sv-lpr-portaria-tools">
+        <div class="sv-lpr-portaria-search">
+            <input type="search" name="q" value="{{ request.GET.q }}" placeholder="Buscar por placa, pessoa ou câmera" aria-label="Buscar passagem">
+            <kbd>/</kbd>
+        </div>
+        <select name="movimento">
+            <option value="">Todos os movimentos</option>
+            {% for value,label in movements %}<option value="{{ value }}" {% if request.GET.movimento == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+        </select>
+        <select name="vinculo">
+            <option value="">Todos os vínculos</option>
+            <option value="sim" {% if request.GET.vinculo == 'sim' %}selected{% endif %}>Cadastradas</option>
+            <option value="nao" {% if request.GET.vinculo == 'nao' %}selected{% endif %}>Não cadastradas</option>
+        </select>
+        <select name="metodo">
+            <option value="">Todas as leituras</option>
+            {% for value,label in match_methods %}<option value="{{ value }}" {% if request.GET.metodo == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+        </select>
+        <input type="date" name="data" value="{{ request.GET.data }}">
+        <button class="button primary" type="submit">Filtrar</button>
+        {% if request.GET %}<a class="button secondary" href="{% url 'lpr:list' %}">Limpar</a>{% endif %}
+    </form>
+
+    <div class="table-wrap sv-lpr-portaria-tablewrap">
+        <table class="lpr-table sv-data-table sv-lpr-portaria-table">
+            <thead>
+                <tr><th>Imagem</th><th>Data / hora</th><th>Placa</th><th>Movimento</th><th>Pessoa / veículo</th><th>Câmera</th><th>Selo</th><th></th></tr>
+            </thead>
+            <tbody>
+            {% for item in page %}
+            <tr class="sv-lpr-review-row {% if not item.person %}sv-unmatched-row{% endif %}" tabindex="0" data-open-review="lpr-review-{{ item.pk }}" aria-label="Revisar passagem {{ item.plate }}">
+                <td>
+                    {% if item.plate_image %}
+                        <img class="lpr-thumb sv-lpr-thumb" src="{% url 'lpr:image' item.pk %}" alt="Placa {{ item.plate }}" loading="lazy">
+                    {% else %}<span class="muted">Sem imagem</span>{% endif %}
+                </td>
+                <td><strong>{{ item.captured_at|date:"d/m/Y H:i:s" }}</strong><small class="table-subtitle">{{ item.get_camera_direction_display }} · faixa {{ item.lane|default:"—" }}</small></td>
+                <td>
+                    <strong class="sv-plate-tag sv-plate-lg">{{ item.plate }}</strong>
+                    {% if item.raw_plate and item.raw_plate != item.plate %}
+                        <small class="table-subtitle">Câmera: <span class="sv-mono">{{ item.raw_plate }}</span> · {{ item.get_match_method_display }}</small>
+                    {% else %}
+                        <small class="table-subtitle">{{ item.get_plate_format_display }} · {{ item.get_match_method_display }}</small>
+                    {% endif %}
+                </td>
+                <td><span class="badge lpr-{{ item.movement|lower }}">{{ item.get_movement_display }}</span></td>
+                <td>
+                    {% if item.person %}
+                        <a class="sv-person-link" href="{% url 'operations:user-detail' item.person.pk %}" onclick="event.stopPropagation()"><strong>{{ item.person.nome_exibicao }}</strong></a>
+                        <small class="table-subtitle">{{ item.vehicle.marca }} {{ item.vehicle.modelo }} · <span class="sv-mono">{{ item.vehicle.placa }}</span></small>
+                    {% else %}
+                        <span class="badge rejeitado">Não cadastrada</span>
+                        <small class="table-subtitle">Clique para revisar e corrigir</small>
+                    {% endif %}
+                </td>
+                <td>{{ item.camera_name }}<small class="table-subtitle">{{ item.camera_ip }}</small></td>
+                <td>{% if item.seal_serial_snapshot %}<strong class="sv-mono">{{ item.seal_serial_snapshot }}</strong><small class="table-subtitle">{{ item.seal_status_snapshot }}</small>{% else %}<span class="muted">—</span>{% endif %}</td>
+                <td><button type="button" class="sv-lpr-review-button" data-open-review="lpr-review-{{ item.pk }}">Revisar →</button></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="8" class="empty">Nenhuma passagem registrada.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if page.paginator.num_pages > 1 %}
+    <div class="pagination"><span>Página {{ page.number }} de {{ page.paginator.num_pages }}</span><div>{% if page.has_previous %}<a class="button secondary small" href="?{% if params %}{{ params }}&{% endif %}page={{ page.previous_page_number }}">Anterior</a>{% endif %}{% if page.has_next %}<a class="button secondary small" href="?{% if params %}{{ params }}&{% endif %}page={{ page.next_page_number }}">Próxima</a>{% endif %}</div></div>
+    {% endif %}
+</section>
+
+{% for item in page %}
+<dialog class="sv-lpr-review-drawer" id="lpr-review-{{ item.pk }}" aria-labelledby="lpr-title-{{ item.pk }}">
+    <div class="sv-lpr-drawer-shell">
+        <div class="sv-lpr-drawer-head">
+            <div>
+                <span class="eyebrow">REVISÃO DA PASSAGEM</span>
+                <h2 id="lpr-title-{{ item.pk }}">{{ item.plate }}</h2>
+                <p>{{ item.captured_at|date:"d/m/Y H:i:s" }} · {{ item.camera_name }}</p>
+            </div>
+            <button type="button" class="sv-lpr-drawer-close" data-close-review aria-label="Fechar">×</button>
+        </div>
+
+        {% if item.plate_image %}
+            <a class="sv-lpr-drawer-image-link" href="{% url 'lpr:image' item.pk %}" target="_blank">
+                <img class="sv-lpr-drawer-image" src="{% url 'lpr:image' item.pk %}" alt="Captura da placa {{ item.raw_plate|default:item.plate }}" loading="lazy">
+            </a>
+        {% else %}
+            <div class="sv-lpr-no-image">Sem imagem armazenada.</div>
+        {% endif %}
+
+        <div class="sv-lpr-readout">
+            <div><span>Leitura original</span><strong class="sv-mono">{{ item.raw_plate|default:item.plate }}</strong></div>
+            <div><span>Identificada</span><strong class="sv-mono">{{ item.plate }}</strong></div>
+            <div><span>Método</span><strong>{{ item.get_match_method_display }}</strong></div>
+            <div><span>Direção / faixa</span><strong>{{ item.get_camera_direction_display }} · {{ item.lane|default:"—" }}</strong></div>
+        </div>
+
+        {% if item.match_note %}<div class="sv-lpr-match-note">{{ item.match_note }}</div>{% endif %}
+
+        <form method="post" action="{% url 'lpr:edit' item.pk %}" class="sv-lpr-inline-edit">
+            {% csrf_token %}
+            <label>
+                <span>Placa correta</span>
+                <input class="sv-lpr-inline-plate" type="text" name="plate" maxlength="12" value="{{ item.plate }}" autocomplete="off" required>
+                <small>Confirme pela foto. Aceita ABC1234 ou ABC1D23.</small>
+            </label>
+
+            <label>
+                <span>Movimento</span>
+                <select name="movement">
+                    {% for value,label in movements %}<option value="{{ value }}" {% if item.movement == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+                </select>
+            </label>
+
+            <label>
+                <span>Observação</span>
+                <textarea name="note" maxlength="255" rows="3" placeholder="Ex.: conferida visualmente na foto">{{ item.manual_note }}</textarea>
+            </label>
+
+            <label class="sv-lpr-learn-toggle">
+                <input type="checkbox" name="learn_rule" checked>
+                <span><strong>Ensinar esta correção ao filtro</strong><small>Se a mesma câmera repetir a mesma leitura errada, o sistema poderá aplicar a placa corrigida automaticamente.</small></span>
+            </label>
+
+            {% if item.person %}
+            <div class="sv-lpr-current-link"><span>Vínculo atual</span><strong>{{ item.person.nome_exibicao }}</strong><small>{{ item.vehicle.marca }} {{ item.vehicle.modelo }} · {{ item.vehicle.placa }}</small></div>
+            {% else %}
+            <div class="sv-lpr-current-link warning"><span>Vínculo atual</span><strong>Não cadastrada</strong><small>Ao salvar uma placa que exista em Veículos, o vínculo será feito automaticamente.</small></div>
+            {% endif %}
+
+            <div class="sv-lpr-drawer-actions">
+                <button type="button" class="button secondary" data-close-review>Cancelar</button>
+                <a class="button secondary" href="{% url 'lpr:edit' item.pk %}">Abrir completo</a>
+                <button type="submit" class="button primary">Salvar correção</button>
+            </div>
+        </form>
+    </div>
+</dialog>
+{% endfor %}
+
+<script>
+(function () {
+    const openDialog = (id) => {
+        const dlg = document.getElementById(id);
+        if (!dlg) return;
+        if (typeof dlg.showModal === 'function') dlg.showModal();
+        else dlg.setAttribute('open', '');
+        const input = dlg.querySelector('.sv-lpr-inline-plate');
+        if (input) { setTimeout(() => { input.focus(); input.select(); }, 60); }
+    };
+
+    document.addEventListener('click', (event) => {
+        const trigger = event.target.closest('[data-open-review]');
+        if (trigger) {
+            if (event.target.closest('a') && !event.target.closest('button')) return;
+            event.preventDefault();
+            openDialog(trigger.dataset.openReview);
+            return;
+        }
+        const close = event.target.closest('[data-close-review]');
+        if (close) {
+            const dlg = close.closest('dialog');
+            if (dlg) dlg.close();
+        }
+    });
+
+    document.querySelectorAll('.sv-lpr-review-row').forEach((row) => {
+        row.addEventListener('keydown', (event) => {
+            if ((event.key === 'Enter' || event.key === ' ') && !event.target.closest('a,button,input,select,textarea')) {
+                event.preventDefault();
+                openDialog(row.dataset.openReview);
+            }
+        });
+    });
+
+    document.querySelectorAll('.sv-lpr-review-drawer').forEach((dlg) => {
+        dlg.addEventListener('click', (event) => {
+            if (event.target === dlg) dlg.close();
+        });
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === '/' && !event.target.matches('input,textarea,select')) {
+            const q = document.querySelector('.sv-lpr-portaria-search input[name="q"]');
+            if (q) { event.preventDefault(); q.focus(); }
+        }
+    });
+})();
+</script>
+{% endblock %}

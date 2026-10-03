@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<style>
+.vehicle-form-v10{--vf-green:#23604a;--vf-lime:#6aa32b;--vf-ink:#203029;--vf-muted:#68756e;--vf-line:#d9e1dc;--vf-soft:#f6f8f5;max-width:1180px;margin:0 auto}.vehicle-form-v10 .vf-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:18px}.vehicle-form-v10 .vf-head h1{margin:2px 0 4px}.vehicle-form-v10 .vf-head p{margin:0;color:var(--vf-muted)}.vehicle-form-v10 .vf-card{background:#fff;border:1px solid var(--vf-line);border-radius:10px;overflow:visible}.vehicle-form-v10 .vf-section{padding:18px 20px;border-bottom:1px solid var(--vf-line)}.vehicle-form-v10 .vf-section-title{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:12px}.vehicle-form-v10 .vf-section-title strong{font-size:16px}.vehicle-form-v10 .vf-section-title small{display:block;color:var(--vf-muted);margin-top:3px}.vehicle-form-v10 .vf-new-person{white-space:nowrap;text-decoration:none;font-weight:700;color:var(--vf-green);border:1px solid var(--vf-line);border-radius:7px;padding:8px 11px;background:#fff}.vehicle-form-v10 .vf-picker{position:relative}.vehicle-form-v10 .vf-search-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}.vehicle-form-v10 .vf-search{width:100%;min-height:46px;padding:10px 13px;border:2px solid #cfd8d2;border-radius:8px;background:#fff;color:var(--vf-ink);font:600 15px/1.3 inherit}.vehicle-form-v10 .vf-search:focus{outline:0;border-color:var(--vf-green);box-shadow:0 0 0 3px rgba(35,96,74,.09)}.vehicle-form-v10 .vf-refresh{border:1px solid var(--vf-line);border-radius:8px;background:var(--vf-soft);color:var(--vf-green);font-weight:700;padding:0 13px;cursor:pointer}.vehicle-form-v10 .vf-help{display:block;margin-top:6px;color:var(--vf-muted);font-size:11px}.vehicle-form-v10 .vf-results{position:absolute;z-index:40;left:0;right:0;top:54px;max-height:390px;overflow:auto;background:#fff;border:1px solid #cdd7d0;border-radius:9px;box-shadow:0 14px 34px rgba(23,47,34,.17)}.vehicle-form-v10 .vf-result{width:100%;border:0;border-bottom:1px solid #edf1ee;background:#fff;color:var(--vf-ink);padding:11px 12px;display:grid;grid-template-columns:38px minmax(0,1fr) auto;gap:10px;align-items:center;text-align:left;cursor:pointer}.vehicle-form-v10 .vf-result:last-child{border-bottom:0}.vehicle-form-v10 .vf-result:hover,.vehicle-form-v10 .vf-result:focus{background:#f0f6f2;outline:0}.vehicle-form-v10 .vf-avatar{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:var(--vf-green);color:#fff;font-weight:800}.vehicle-form-v10 .vf-result-copy{min-width:0}.vehicle-form-v10 .vf-result-copy strong,.vehicle-form-v10 .vf-result-copy span,.vehicle-form-v10 .vf-result-copy small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.vehicle-form-v10 .vf-result-copy strong{font-size:14px}.vehicle-form-v10 .vf-result-copy span{font-size:11px;color:#415149;margin-top:2px}.vehicle-form-v10 .vf-result-copy small{font-size:10px;color:var(--vf-muted);margin-top:3px}.vehicle-form-v10 .vf-recent{display:inline-block;padding:2px 7px;border-radius:11px;background:#e5f1df;color:#3d6b24;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.04em}.vehicle-form-v10 .vf-count{font-size:10px;color:var(--vf-muted);text-align:right}.vehicle-form-v10 .vf-selected{margin-top:9px;padding:12px;border:1px solid #bdd1c4;border-radius:9px;background:#f4f8f5;display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:11px;align-items:center}.vehicle-form-v10 .vf-selected .vf-avatar{width:44px;height:44px}.vehicle-form-v10 .vf-selected-copy strong,.vehicle-form-v10 .vf-selected-copy span,.vehicle-form-v10 .vf-selected-copy small{display:block}.vehicle-form-v10 .vf-selected-copy strong{font-size:15px}.vehicle-form-v10 .vf-selected-copy span{font-size:11px;color:#405047;margin-top:2px}.vehicle-form-v10 .vf-selected-copy small{font-size:10px;color:var(--vf-muted);margin-top:4px}.vehicle-form-v10 .vf-change{border:1px solid #cbd6cf;border-radius:7px;background:#fff;color:var(--vf-green);padding:7px 10px;font-size:11px;font-weight:800;cursor:pointer}.vehicle-form-v10 .vf-empty{padding:14px;color:var(--vf-muted);font-size:12px}.vehicle-form-v10 .vf-error{margin-top:6px;color:#a53027;font-size:11px}.vehicle-form-v10 .vf-grid{padding:20px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}.vehicle-form-v10 .vf-field{display:flex;flex-direction:column;gap:6px}.vehicle-form-v10 .vf-field.wide{grid-column:1/-1}.vehicle-form-v10 .vf-field label{font-size:12px;font-weight:750}.vehicle-form-v10 .vf-field input,.vehicle-form-v10 .vf-field select,.vehicle-form-v10 .vf-field textarea{width:100%;min-height:42px;padding:9px 11px;border:1px solid #cbd5cf;border-radius:7px;background:#fff;color:var(--vf-ink);font:inherit}.vehicle-form-v10 .vf-field input[type=file]{padding:7px}.vehicle-form-v10 .vf-field textarea{min-height:90px;resize:vertical}.vehicle-form-v10 .vf-field .helptext{font-size:10px;color:var(--vf-muted)}.vehicle-form-v10 ul.errorlist{list-style:none;margin:0;padding:0;color:#a53027;font-size:11px}.vehicle-form-v10 .vf-actions{padding:16px 20px;border-top:1px solid var(--vf-line);display:flex;justify-content:flex-end;gap:8px;background:#fbfcfb}.vehicle-form-v10 .vf-native{display:none!important}@media(max-width:720px){.vehicle-form-v10 .vf-head,.vehicle-form-v10 .vf-section-title{align-items:flex-start;flex-direction:column}.vehicle-form-v10 .vf-new-person{width:100%;text-align:center}.vehicle-form-v10 .vf-grid{grid-template-columns:1fr}.vehicle-form-v10 .vf-field.wide{grid-column:auto}.vehicle-form-v10 .vf-result{grid-template-columns:34px minmax(0,1fr)}.vehicle-form-v10 .vf-result .vf-count{grid-column:2;text-align:left}.vehicle-form-v10 .vf-selected{grid-template-columns:38px minmax(0,1fr)}.vehicle-form-v10 .vf-selected .vf-avatar{width:38px;height:38px}.vehicle-form-v10 .vf-change{grid-column:1/-1}}
+</style>
+
+<div class="vehicle-form-v10">
+  <div class="vf-head">
+    <div><p class="eyebrow">VEÍCULOS</p><h1>{{ title }}</h1><p>Localize rapidamente a pessoa e depois preencha os dados do veículo.</p></div>
+  </div>
+
+  {% if form.non_field_errors %}<div class="notice error">{{ form.non_field_errors }}</div>{% endif %}
+
+  <form method="post" enctype="multipart/form-data" class="vf-card" id="vehicle-form-v10">
+    {% csrf_token %}
+
+    <section class="vf-section">
+      <div class="vf-section-title">
+        <div><strong>1. Proprietário</strong><small>As pessoas cadastradas mais recentemente aparecem primeiro.</small></div>
+        <a class="vf-new-person" href="{% url 'people:create' %}" target="_blank" rel="noopener">+ Cadastrar nova pessoa</a>
+      </div>
+
+      <div class="vf-picker" id="vf-person-picker" data-search-url="{% url 'vehicles:person-search' %}">
+        <div class="vf-search-row">
+          <input id="vf-person-search" class="vf-search" type="search" autocomplete="off" placeholder="Digite nome, nome preferido, cargo, seção, telefone ou identidade..." aria-label="Buscar proprietário">
+          <button id="vf-refresh" class="vf-refresh" type="button" title="Atualizar pessoas recém-cadastradas">Atualizar recentes</button>
+        </div>
+        <small class="vf-help">Depois de cadastrar uma pessoa em outra aba, clique em “Atualizar recentes”. Digite pelo menos 2 caracteres para pesquisar.</small>
+        <div id="vf-results" class="vf-results" hidden></div>
+        <div id="vf-selected" class="vf-selected" hidden></div>
+        <input class="vf-native" type="hidden" name="{{ form.proprietario.html_name }}" id="{{ form.proprietario.id_for_label }}" value="{{ form.proprietario.value|default_if_none:'' }}">
+        {% if form.proprietario.errors %}<div class="vf-error">{{ form.proprietario.errors }}</div>{% endif %}
+      </div>
+    </section>
+
+    <section class="vf-grid">
+      {% for field in form %}
+        {% if field.name != 'proprietario' %}
+        <div class="vf-field {% if field.name == 'motivo_status' or field.name == 'foto_dianteira' or field.name == 'foto_traseira' %}wide{% endif %}">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% if field.help_text %}<span class="helptext">{{ field.help_text }}</span>{% endif %}
+          {{ field.errors }}
+        </div>
+        {% endif %}
+      {% endfor %}
+    </section>
+
+    <div class="vf-actions">
+      <a class="button secondary" href="{% url 'vehicles:list' %}">Voltar</a>
+      <button class="button primary" type="submit">Salvar veículo</button>
+    </div>
+  </form>
+</div>
+
+<script>
+(() => {
+  const picker = document.getElementById('vf-person-picker');
+  if (!picker) return;
+  const search = document.getElementById('vf-person-search');
+  const results = document.getElementById('vf-results');
+  const selected = document.getElementById('vf-selected');
+  const refresh = document.getElementById('vf-refresh');
+  const native = document.getElementById('{{ form.proprietario.id_for_label }}');
+  const url = picker.dataset.searchUrl;
+  let timer = null;
+  let controller = null;
+
+  const esc = (s) => String(s ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+  const initials = (name) => String(name || '?').trim().split(/\s+/).slice(0,2).map(x => x[0] || '').join('').toUpperCase();
+
+  function closeResults(){ results.hidden = true; }
+
+  function showSelected(person){
+    native.value = person.id;
+    selected.innerHTML = `
+      <div class="vf-avatar">${esc(initials(person.name))}</div>
+      <div class="vf-selected-copy">
+        <strong>${esc(person.name)}</strong>
+        <span>${esc([person.rank, person.section].filter(Boolean).join(' · ') || 'Sem cargo/setor informados')}</span>
+        <small>${person.created_label ? 'Cadastrada em ' + esc(person.created_label) : ''}${person.phone ? ' · ' + esc(person.phone) : ''}</small>
+      </div>
+      <button class="vf-change" type="button">Trocar proprietário</button>`;
+    selected.hidden = false;
+    search.value = '';
+    search.hidden = true;
+    refresh.hidden = true;
+    closeResults();
+    selected.querySelector('.vf-change').addEventListener('click', () => {
+      native.value = '';
+      selected.hidden = true;
+      search.hidden = false;
+      refresh.hidden = false;
+      search.focus();
+      loadPeople('');
+    });
+  }
+
+  function renderPeople(list, recentMode){
+    if (!list.length) {
+      results.innerHTML = `<div class="vf-empty">${recentMode ? 'Nenhuma pessoa recente encontrada.' : 'Nenhuma pessoa encontrada com essa busca.'}</div>`;
+      results.hidden = false;
+      return;
+    }
+    results.innerHTML = list.map(p => `
+      <button type="button" class="vf-result" data-id="${p.id}">
+        <span class="vf-avatar">${esc(initials(p.name))}</span>
+        <span class="vf-result-copy">
+          <strong>${esc(p.name)} ${p.recent ? '<em class="vf-recent">recente</em>' : ''}</strong>
+          <span>${esc([p.rank, p.section].filter(Boolean).join(' · ') || 'Sem cargo/setor informados')}</span>
+          <small>${p.created_label ? 'Cadastrada em ' + esc(p.created_label) : ''}${p.phone ? ' · ' + esc(p.phone) : ''}</small>
+        </span>
+        <span class="vf-count">${p.vehicle_count ? p.vehicle_count + ' veículo(s)' : 'sem veículo'}</span>
+      </button>`).join('');
+    results.hidden = false;
+    results.querySelectorAll('.vf-result').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const p = list.find(x => String(x.id) === btn.dataset.id);
+        if (p) showSelected(p);
+      });
+    });
+  }
+
+  async function loadPeople(q, id=''){
+    if (controller) controller.abort();
+    controller = new AbortController();
+    const params = new URLSearchParams();
+    if (id) params.set('id', id); else if (q) params.set('q', q);
+    results.innerHTML = '<div class="vf-empty">Buscando...</div>';
+    results.hidden = false;
+    try {
+      const response = await fetch(`${url}?${params.toString()}`, {headers:{'X-Requested-With':'XMLHttpRequest'}, signal:controller.signal});
+      if (!response.ok) throw new Error('Falha na busca');
+      const data = await response.json();
+      if (id && data.results && data.results[0]) {
+        showSelected(data.results[0]);
+      } else {
+        renderPeople(data.results || [], !q);
+      }
+    } catch (err) {
+      if (err.name === 'AbortError') return;
+      results.innerHTML = '<div class="vf-empty">Não foi possível carregar as pessoas. Tente novamente.</div>';
+      results.hidden = false;
+    }
+  }
+
+  search.addEventListener('focus', () => loadPeople(search.value.trim()));
+  search.addEventListener('input', () => {
+    clearTimeout(timer);
+    const q = search.value.trim();
+    if (q && q.length < 2) {
+      results.innerHTML = '<div class="vf-empty">Digite pelo menos 2 caracteres.</div>';
+      results.hidden = false;
+      return;
+    }
+    timer = setTimeout(() => loadPeople(q), 220);
+  });
+  refresh.addEventListener('click', () => { search.value = ''; loadPeople(''); search.focus(); });
+  document.addEventListener('click', (e) => { if (!picker.contains(e.target)) closeResults(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeResults(); });
+
+  if (native.value) loadPeople('', native.value); else loadPeople('');
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends "seals/mobile_base.html" %}
+{% load static %}
+{% block title %}{{ validation.title }} · {{ seal.veiculo.placa }}{% endblock %}
+{% block content %}
+<div id="result-live">
+  <section class="verdict {{ validation.state }}" aria-labelledby="verdict-title">
+    <span class="verdict-symbol" aria-hidden="true">{{ validation.symbol }}</span>
+    <p class="eyebrow">RESULTADO DA CONSULTA</p><h1 id="verdict-title">{{ validation.title }}</h1>
+    <ul>{% for reason in validation.reasons %}<li>{{ reason }}</li>{% endfor %}</ul>
+    <p class="checked">Consultado em {{ validation.checked_at|date:"d/m/Y H:i:s" }}</p>
+  </section>
+  <section class="mobile-card">
+    <div class="vehicle-heading"><div><p class="eyebrow">{{ seal.veiculo.get_tipo_display }}</p><h2 class="plate">{{ seal.veiculo.placa }}</h2></div><span class="chip">{{ seal.veiculo.get_status_display }}</span></div>
+    <p>{{ seal.veiculo.marca }} {{ seal.veiculo.modelo }} · {{ seal.veiculo.cor }}</p>
+    <dl class="details">
+      <div><dt>Número do selo</dt><dd>{{ seal.numero_serial }}</dd></div>
+      <div><dt>Situação cadastrada</dt><dd>{{ seal.get_status_display }}</dd></div>
+      <div><dt>Válido até</dt><dd>{{ seal.validade|date:"d/m/Y"|default:"Não informada" }}</dd></div>
+      <div><dt>Proprietário</dt><dd>{{ seal.veiculo.proprietario.nome_exibicao }}</dd></div>
+      <div><dt>Posto / cargo</dt><dd>{{ seal.veiculo.proprietario.identificacao_funcional }}</dd></div>
+      <div><dt>Seção / setor</dt><dd>{{ seal.veiculo.proprietario.secao|default:"Não informado" }}</dd></div>
+    </dl>
+    <a class="text-link" href="{% url 'people:detail' seal.veiculo.proprietario.pk %}">Abrir ficha do proprietário →</a>
+  </section>
+</div>
+<section id="result-stale" class="notice" hidden><h2>Consulte novamente</h2><p>O resultado anterior não confirma a situação atual. Atualize a consulta com conexão ao computador.</p></section>
+<div class="result-actions"><a class="button primary" href="{% url 'seals:mobile' %}">Ler próximo QR Code</a><a class="button secondary" href="{% url 'seals:public' seal.token_publico %}">Atualizar consulta</a></div>
+<p class="footnote">Resultado referente ao momento da consulta. Confira se a placa física corresponde ao veículo. O QR Code, sozinho, não comprova a identidade do condutor.</p>
+<script src="{% static 'js/seal-result.js' %}" defer></script>
+{% endblock %}

@@ -1,0 +1,240 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Selos{% endblock %}
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/seals-ops.css' %}">
+
+<div class="sv-page-head seals-head">
+  <div>
+    <p class="eyebrow">QR CODE</p>
+    <h1>Selos veiculares</h1>
+    <p>Consulte, confira e emita os selos vinculados aos veículos.</p>
+  </div>
+  <div class="actions">
+    <a class="button secondary" href="{% url 'seals:request-create' %}">Solicitar selo</a>
+    <a class="button primary" href="{% url 'operations:link-seal' %}">+ Vincular código</a>
+  </div>
+</div>
+
+<section class="seal-kpis" aria-label="Resumo dos selos">
+  <a class="seal-kpi" href="{% url 'seals:list' %}?status=ATIVO">
+    <span>ATIVOS</span>
+    <strong>{{ active_count }}</strong>
+    <small>de {{ total_count }} emitidos</small>
+  </a>
+  <a class="seal-kpi seal-kpi-warn" href="{% url 'seals:list' %}?validade=vencendo">
+    <span>VENCENDO EM 30 DIAS</span>
+    <strong>{{ expiring_count }}</strong>
+    <small>exigem atenção</small>
+  </a>
+  <a class="seal-kpi" href="{% url 'seals:list' %}?validade=sem_validade">
+    <span>SEM VALIDADE DEFINIDA</span>
+    <strong>{{ no_validity_count }}</strong>
+    <small>podem ser revisados</small>
+  </a>
+  <a class="seal-kpi {% if pending_request_count %}seal-kpi-warn{% endif %}" href="#solicitacoes">
+    <span>SOLICITAÇÕES PENDENTES</span>
+    <strong>{{ pending_request_count }}</strong>
+    <small>aguardando análise</small>
+  </a>
+</section>
+
+<section class="card seal-directory">
+  <nav class="seal-tabs" aria-label="Filtro por situação">
+    <a class="{% if not status_filter and not validade_filter %}active{% endif %}" href="{% url 'seals:list' %}{% if q %}?q={{ q|urlencode }}{% endif %}">Todos <em>{{ total_count }}</em></a>
+    <a class="{% if status_filter == 'ATIVO' %}active{% endif %}" href="{% url 'seals:list' %}?status=ATIVO{% if q %}&q={{ q|urlencode }}{% endif %}">Ativos</a>
+    <a class="{% if status_filter == 'PENDENTE' %}active{% endif %}" href="{% url 'seals:list' %}?status=PENDENTE{% if q %}&q={{ q|urlencode }}{% endif %}">Pendentes</a>
+    <a class="{% if validade_filter == 'vencendo' %}active{% endif %}" href="{% url 'seals:list' %}?validade=vencendo{% if q %}&q={{ q|urlencode }}{% endif %}">Vencendo</a>
+    <a class="{% if status_filter == 'BLOQUEADO' %}active{% endif %}" href="{% url 'seals:list' %}?status=BLOQUEADO{% if q %}&q={{ q|urlencode }}{% endif %}">Bloqueados</a>
+    <a class="{% if validade_filter == 'vencido' or status_filter == 'EXPIRADO' %}active{% endif %}" href="{% url 'seals:list' %}?validade=vencido{% if q %}&q={{ q|urlencode }}{% endif %}">Vencidos</a>
+  </nav>
+
+  <form class="seal-tools" method="get">
+    <div class="seal-search">
+      <input type="search" name="q" value="{{ q }}" placeholder="Buscar por código, placa, pessoa ou veículo" aria-label="Buscar selos">
+      <span class="seal-search-icon" aria-hidden="true">⌕</span>
+    </div>
+    <select name="status" aria-label="Status">
+      <option value="">Todos os status</option>
+      <option value="ATIVO" {% if status_filter == 'ATIVO' %}selected{% endif %}>Ativo</option>
+      <option value="PENDENTE" {% if status_filter == 'PENDENTE' %}selected{% endif %}>Pendente</option>
+      <option value="BLOQUEADO" {% if status_filter == 'BLOQUEADO' %}selected{% endif %}>Bloqueado</option>
+      <option value="CANCELADO" {% if status_filter == 'CANCELADO' %}selected{% endif %}>Cancelado</option>
+      <option value="EXPIRADO" {% if status_filter == 'EXPIRADO' %}selected{% endif %}>Expirado</option>
+    </select>
+    <select name="validade" aria-label="Validade">
+      <option value="">Qualquer validade</option>
+      <option value="sem_validade" {% if validade_filter == 'sem_validade' %}selected{% endif %}>Sem validade definida</option>
+      <option value="vencendo" {% if validade_filter == 'vencendo' %}selected{% endif %}>Vencendo em 30 dias</option>
+      <option value="vencido" {% if validade_filter == 'vencido' %}selected{% endif %}>Vencido</option>
+    </select>
+    <button class="button primary" type="submit">Filtrar</button>
+    {% if q or status_filter or validade_filter %}<a class="button secondary" href="{% url 'seals:list' %}">Limpar</a>{% endif %}
+  </form>
+
+  <div class="seal-result-line">
+    <span>{{ page_obj.paginator.count }} selo{{ page_obj.paginator.count|pluralize }} encontrado{{ page_obj.paginator.count|pluralize }}</span>
+    <span>Clique em uma linha para abrir os detalhes</span>
+  </div>
+
+  <div class="seal-table-wrap">
+    <table class="seal-table">
+      <thead>
+        <tr>
+          <th class="seal-col-qr">QR</th>
+          <th>Código</th>
+          <th>Veículo</th>
+          <th>Proprietário</th>
+          <th>Validade</th>
+          <th>Status</th>
+          <th class="seal-col-action">Ação</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for seal in seals %}
+        <tr class="seal-row" tabindex="0"
+            data-code="{{ seal.numero_serial }}"
+            data-status="{{ seal.get_status_display }}"
+            data-status-class="{{ seal.status|lower }}"
+            data-plate="{{ seal.veiculo.placa }}"
+            data-vehicle="{{ seal.veiculo.marca }} {{ seal.veiculo.modelo }}"
+            data-owner="{{ seal.veiculo.proprietario.nome_exibicao }}"
+            data-owner-meta="{{ seal.veiculo.proprietario.cargo }}{% if seal.veiculo.proprietario.secao %} · {{ seal.veiculo.proprietario.secao }}{% endif %}"
+            data-validity="{% if seal.validade %}{{ seal.validade|date:'d/m/Y' }}{% else %}Não definida{% endif %}"
+            data-issued="{{ seal.emitido_em|date:'d/m/Y H:i' }}"
+            data-qr="{% url 'seals:qr' seal.pk %}"
+            data-pdf="{% url 'seals:pdf' seal.pk %}"
+            data-person="{% url 'operations:user-detail' seal.veiculo.proprietario.pk %}">
+          <td class="seal-col-qr"><img class="seal-mini-qr" src="{% url 'seals:qr' seal.pk %}" alt="QR {{ seal.numero_serial }}" loading="lazy"></td>
+          <td>
+            <strong class="seal-code">{{ seal.numero_serial }}</strong>
+            <span class="seal-muted">Emitido {{ seal.emitido_em|date:"d/m/Y" }}</span>
+          </td>
+          <td>
+            <span class="seal-plate">{{ seal.veiculo.placa }}</span>
+            <span class="seal-muted">{{ seal.veiculo.marca }} {{ seal.veiculo.modelo }}</span>
+          </td>
+          <td>
+            <strong>{{ seal.veiculo.proprietario.nome_exibicao }}</strong>
+            <span class="seal-muted">{{ seal.veiculo.proprietario.cargo|default:seal.veiculo.proprietario.get_classe_funcional_display }}</span>
+          </td>
+          <td>
+            {% if seal.validade %}
+              <strong>{{ seal.validade|date:"d/m/Y" }}</strong>
+              {% if seal.validade < today %}<span class="seal-date-alert">Vencido</span>{% elif seal.validade <= soon %}<span class="seal-date-warn">Vence em breve</span>{% endif %}
+            {% else %}
+              <span class="seal-no-date">Não definida</span>
+            {% endif %}
+          </td>
+          <td><span class="badge {{ seal.status|lower }}">{{ seal.get_status_display }}</span></td>
+          <td class="seal-col-action"><button class="seal-open" type="button">Abrir →</button></td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="7" class="empty seal-empty">Nenhum selo encontrado com esses filtros.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if page_obj.paginator.num_pages > 1 %}
+  <div class="seal-pagination">
+    <span>Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+    <div>
+      {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q|urlencode }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if validade_filter %}&validade={{ validade_filter }}{% endif %}">← Anterior</a>{% endif %}
+      {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q|urlencode }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if validade_filter %}&validade={{ validade_filter }}{% endif %}">Próxima →</a>{% endif %}
+    </div>
+  </div>
+  {% endif %}
+</section>
+
+<section class="card seal-requests" id="solicitacoes">
+  <div class="seal-section-head">
+    <div><p class="eyebrow">FLUXO</p><h2>Solicitações recentes</h2><p>Acompanhe os pedidos de selo enviados para análise.</p></div>
+    <a class="button secondary small" href="{% url 'seals:request-create' %}">Nova solicitação</a>
+  </div>
+  <div class="seal-table-wrap">
+    <table class="seal-table seal-request-table">
+      <thead><tr><th>Veículo</th><th>Proprietário</th><th>Solicitado em</th><th>Situação</th></tr></thead>
+      <tbody>
+      {% for item in requests %}
+        <tr>
+          <td><span class="seal-plate">{{ item.veiculo.placa }}</span><span class="seal-muted">{{ item.veiculo.marca }} {{ item.veiculo.modelo }}</span></td>
+          <td>{{ item.veiculo.proprietario.nome_exibicao }}</td>
+          <td>{{ item.solicitado_em|date:"d/m/Y H:i" }}</td>
+          <td><span class="badge {{ item.status|lower }}">{{ item.get_status_display }}</span></td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="4" class="empty seal-empty">Nenhuma solicitação registrada.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<dialog class="seal-drawer" id="sealDrawer" aria-labelledby="sealDrawerTitle">
+  <div class="seal-drawer-inner">
+    <header class="seal-drawer-head">
+      <div><span class="seal-drawer-kicker">DETALHES DO SELO</span><h2 id="sealDrawerTitle">—</h2></div>
+      <button type="button" class="seal-drawer-close" aria-label="Fechar">×</button>
+    </header>
+    <div class="seal-drawer-qrbox"><img id="drawerQr" alt="QR Code do selo"><span id="drawerStatus" class="badge">—</span></div>
+    <dl class="seal-drawer-data">
+      <div><dt>Código</dt><dd id="drawerCode">—</dd></div>
+      <div><dt>Placa</dt><dd id="drawerPlate" class="seal-plate">—</dd></div>
+      <div><dt>Veículo</dt><dd id="drawerVehicle">—</dd></div>
+      <div><dt>Proprietário</dt><dd><strong id="drawerOwner">—</strong><small id="drawerOwnerMeta"></small></dd></div>
+      <div><dt>Validade</dt><dd id="drawerValidity">—</dd></div>
+      <div><dt>Emitido em</dt><dd id="drawerIssued">—</dd></div>
+    </dl>
+    <div class="seal-drawer-actions">
+      <a id="drawerPerson" class="button secondary" href="#">Ver pessoa</a>
+      <a id="drawerQrLink" class="button secondary" href="#" target="_blank" rel="noopener">Visualizar QR</a>
+      <a id="drawerPdf" class="button primary" href="#">Baixar selo PDF</a>
+    </div>
+  </div>
+</dialog>
+
+<script>
+(function(){
+  const dlg = document.getElementById('sealDrawer');
+  if (!dlg) return;
+  const byId = id => document.getElementById(id);
+  const statusEl = byId('drawerStatus');
+
+  function openRow(row){
+    const d = row.dataset;
+    byId('sealDrawerTitle').textContent = d.code || 'Selo';
+    byId('drawerCode').textContent = d.code || '—';
+    byId('drawerPlate').textContent = d.plate || '—';
+    byId('drawerVehicle').textContent = d.vehicle || '—';
+    byId('drawerOwner').textContent = d.owner || '—';
+    byId('drawerOwnerMeta').textContent = d.ownerMeta || '';
+    byId('drawerValidity').textContent = d.validity || '—';
+    byId('drawerIssued').textContent = d.issued || '—';
+    byId('drawerQr').src = d.qr || '';
+    byId('drawerQrLink').href = d.qr || '#';
+    byId('drawerPdf').href = d.pdf || '#';
+    byId('drawerPerson').href = d.person || '#';
+    statusEl.textContent = d.status || '—';
+    statusEl.className = 'badge ' + (d.statusClass || '');
+    dlg.showModal();
+  }
+
+  document.querySelectorAll('.seal-row').forEach(row => {
+    row.addEventListener('click', e => {
+      if (e.target.closest('a,button')) {
+        if (e.target.closest('.seal-open')) openRow(row);
+        return;
+      }
+      openRow(row);
+    });
+    row.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); openRow(row); }
+    });
+  });
+
+  dlg.querySelector('.seal-drawer-close').addEventListener('click', () => dlg.close());
+  dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
+})();
+</script>
+{% endblock %}

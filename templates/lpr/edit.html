@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Corrigir passagem | Sistema de Selos{% endblock %}
+{% block content %}
+<div class="page-head sv-page-head">
+    <div>
+        <p class="eyebrow">REVISÃO MANUAL</p>
+        <h1>Corrigir passagem</h1>
+        <p>A leitura original da câmera nunca é alterada. A correção fica auditada e pode ensinar o filtro para próximas leituras iguais.</p>
+    </div>
+    <div class="actions"><a class="button secondary" href="{% url 'lpr:list' %}">Voltar</a></div>
+</div>
+
+<div class="sv-manual-grid">
+    <section class="card sv-manual-photo-card">
+        <div class="card-head"><div><h2>Captura da câmera</h2><p>{{ passage.captured_at|date:"d/m/Y H:i:s" }} · {{ passage.camera_name }}</p></div></div>
+        {% if passage.plate_image %}
+            <a href="{% url 'lpr:image' passage.pk %}" target="_blank"><img class="sv-manual-plate-image" src="{% url 'lpr:image' passage.pk %}" alt="Captura {{ raw_plate }}"></a>
+        {% else %}
+            <div class="empty">Sem imagem armazenada.</div>
+        {% endif %}
+        <dl class="detail-grid sv-manual-meta">
+            <div><dt>Leitura original</dt><dd><span class="sv-plate-tag sv-plate-lg">{{ raw_plate }}</span></dd></div>
+            <div><dt>Direção da câmera</dt><dd>{{ passage.get_camera_direction_display }}</dd></div>
+            <div><dt>Faixa</dt><dd>{{ passage.lane|default:"—" }}</dd></div>
+            <div><dt>IP</dt><dd class="sv-mono">{{ passage.camera_ip }}</dd></div>
+        </dl>
+    </section>
+
+    <section class="card sv-manual-form-card">
+        <div class="card-head"><div><h2>Correção</h2><p>Confirme visualmente a placa antes de salvar.</p></div></div>
+        <form method="post" class="stack-form sv-manual-form">
+            {% csrf_token %}
+            {% if form.non_field_errors %}<div class="notice warning">{{ form.non_field_errors }}</div>{% endif %}
+
+            <label for="{{ form.plate.id_for_label }}">{{ form.plate.label }}</label>
+            {{ form.plate }}
+            {% if form.plate.help_text %}<small>{{ form.plate.help_text }}</small>{% endif %}
+            {% for error in form.plate.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+
+            <label for="{{ form.movement.id_for_label }}">{{ form.movement.label }}</label>
+            {{ form.movement }}
+            {% for error in form.movement.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+
+            <label for="{{ form.note.id_for_label }}">{{ form.note.label }}</label>
+            {{ form.note }}
+            {% for error in form.note.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+
+            <label class="sv-manual-learn" for="{{ form.learn_rule.id_for_label }}">
+                {{ form.learn_rule }}
+                <span><strong>{{ form.learn_rule.label }}</strong><small>{{ form.learn_rule.help_text }}</small></span>
+            </label>
+
+            {% if existing_rule %}
+            <div class="notice warning sv-rule-note">
+                Regra atual desta câmera: <strong class="sv-mono">{{ existing_rule.raw_plate }} → {{ existing_rule.corrected_plate }}</strong>.
+                Desmarque a opção acima e salve para desativá-la.
+            </div>
+            {% endif %}
+
+            <div class="sv-manual-actions">
+                <a class="button secondary" href="{% url 'lpr:list' %}">Cancelar</a>
+                <button class="button primary" type="submit">Salvar correção</button>
+            </div>
+        </form>
+    </section>
+</div>
+{% endblock %}
